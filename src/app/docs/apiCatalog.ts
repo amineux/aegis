@@ -127,7 +127,7 @@ export const API_GROUPS: ApiGroup[] = [
         method: 'GET',
         summary: 'Recent seismic events from the USGS feed.',
         returns: ['earthquakes', 'total', 'timestamp'],
-        notes: 'M2.5+ over the trailing day. Each event carries `magnitude`, `place`, `depth`, `time`, `tsunami`, `alert`.',
+        notes: 'M2.5+ over the trailing day. Each event carries `magnitude`, `place`, `depth`, `time`, `tsunami`, `alert`. Server-side 2-minute TTL with inflight coalescing — the HUD and ticker share one USGS hop.',
       },
       {
         path: '/api/fires',

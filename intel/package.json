@@ -1,8 +1,8 @@
 {
-  "name": "osiris-hq-intel",
+  "name": "osiris-command-intel",
   "version": "1.0.0",
   "private": true,
-  "description": "Osiris HQ intelligence sidecar — sanctions / Wikidata resolver for amineux/osiris-hq.",
+  "description": "Osiris Command intelligence sidecar — sanctions / Wikidata resolver for amineux/osiris-command.",
   "scripts": {
     "start": "node server.js"
   },

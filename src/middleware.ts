@@ -12,7 +12,7 @@ export function middleware(request: NextRequest, event: NextFetchEvent) {
     language: "en-US",
     referrer: request.headers.get('referer') || "",
     screen: "1920x1080",
-    title: "Osiris HQ",
+    title: "Osiris Command",
     url: url,
     website: process.env.UMAMI_WEBSITE_ID || "cd8f216c-fc3f-45f5-ba1a-e10309a61d18"
   };

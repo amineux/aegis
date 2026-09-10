@@ -24,6 +24,7 @@ interface LayerPanelProps {
   onTerrainRetry?: () => void;
   onTerrainFocus?: () => void;
   on3DModeSelected?: () => void;
+  layerStatus?: Record<string, 'loading' | 'ready' | 'error'>;
 }
 
 interface LayerDef {
@@ -197,7 +198,7 @@ function SubLayerStem() {
   );
 }
 
-function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'core', setTheme, capabilities = {}, terrainStatus = 'idle', onTerrainRetry, onTerrainFocus, on3DModeSelected }: LayerPanelProps) {
+function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'core', setTheme, capabilities = {}, terrainStatus = 'idle', onTerrainRetry, onTerrainFocus, on3DModeSelected, layerStatus = {} }: LayerPanelProps) {
   const [hoveredGroup, setHoveredGroup] = useState<string | null>(null);
   /**
    * A pinned group stays open when the pointer leaves. Hover-only flyouts are
@@ -262,6 +263,15 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
     return found ? total : null;
   };
 
+  const statusFor = (layer: LayerDef): 'loading' | 'ready' | 'error' | null => {
+    if (!layer.dataKey) return null;
+    const keys = layer.dataKey.split(',').map(k => k.replace(/_/g, '-'));
+    for (const k of [layer.key, ...layer.dataKey.split(','), ...keys]) {
+      if (layerStatus[k]) return layerStatus[k];
+    }
+    return null;
+  };
+
   /* ── MOBILE ── */
   if (isMobile) {
     return (
@@ -276,6 +286,7 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
                 const isLayerActive = activeLayers[layer.key];
                 const count = getCount(layer.dataKey, layer.catKey);
                 const dormant = !!layer.parent && !activeLayers[layer.parent];
+                const status = isLayerActive ? statusFor(layer) : null;
                 return (
                   <button
                     key={layer.key}
@@ -290,6 +301,8 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
                       {layer.label}
                       {layer.description && <span className="block mt-0.5 text-[9px] normal-case tracking-normal text-white/35">{layer.description}</span>}
                     </span>
+                    {status === 'loading' && <span className="w-2 h-2 rounded-full border border-white/40 border-t-transparent animate-spin" />}
+                    {status === 'error' && <span className="text-[9px] font-mono text-[#FF5722]">ERR</span>}
                     {count !== null && (
                       <span className="text-[10px] font-mono tabular-nums text-white/25">
                         {count.toLocaleString()}
@@ -464,6 +477,7 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
                         const isLayerActive = activeLayers[layer.key];
                         const count = getCount(layer.dataKey, layer.catKey);
                         const dormant = !!layer.parent && !activeLayers[layer.parent];
+                        const status = isLayerActive ? statusFor(layer) : null;
 
                         return (
                           <button
@@ -471,7 +485,7 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
                             onClick={() => toggle(layer.key)}
                             aria-pressed={!!isLayerActive}
                             aria-label={layer.label}
-                            title={dormant ? 'Turn the layer above on to use this' : undefined}
+                            title={dormant ? 'Turn the layer above on to use this' : status === 'error' ? 'Last fetch failed' : undefined}
                             className={`relative w-full flex items-center gap-3 py-1.5 rounded-md hover:bg-white/[0.05] transition-colors cursor-pointer text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-white/30 ${layer.parent ? 'pl-[22px] pr-1' : 'px-1'} ${dormant ? 'opacity-40' : ''}`}
                           >
                             {layer.parent && <SubLayerStem />}
@@ -480,6 +494,8 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
                               {layer.label}
                               {layer.description && <span className="block mt-0.5 text-[9px] normal-case tracking-normal text-white/35">{layer.description}</span>}
                             </span>
+                            {status === 'loading' && <span className="w-2 h-2 rounded-full border border-white/40 border-t-transparent animate-spin" />}
+                            {status === 'error' && <span className="text-[9px] font-mono text-[#FF5722]">ERR</span>}
                             {count !== null && (
                               <span className={`text-[10px] font-mono tabular-nums transition-colors ${isLayerActive ? 'text-white/45' : 'text-white/20'}`}>
                                 {count.toLocaleString()}

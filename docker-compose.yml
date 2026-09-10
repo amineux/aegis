@@ -1,11 +1,11 @@
-name: osiris-hq
+name: osiris-command
 services:
   osiris:
     # Builds locally from the Dockerfile so you always run this clone.
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: osiris-hq
+    container_name: osiris-command
     # Host port is configurable via OSIRIS_PORT in .env (defaults to 3000).
     ports:
       - "${OSIRIS_PORT:-3000}:3000"
@@ -27,7 +27,7 @@ services:
 
   osiris-cache:
     image: nginx:alpine
-    container_name: osiris-hq-cache
+    container_name: osiris-command-cache
     ports:
       - "8080:8080"
     volumes:
@@ -43,7 +43,7 @@ services:
     build:
       context: ./intel
       dockerfile: Dockerfile
-    container_name: osiris-hq-intel
+    container_name: osiris-command-intel
     ports:
       - "4000:4000"
     restart: unless-stopped
@@ -64,19 +64,19 @@ x-casaos:
   category: Network
   description:
     en_us: >-
-      Osiris HQ is amineux’s personal OSINT command center — a standalone
-      derivative of the open-source OSIRIS dashboard. It aggregates real-time
-      global intelligence across aviation, maritime, CCTV, seismic activity,
-      wildfires, news, weather, space weather, cyber threats and conflict
-      zones on a GPU-accelerated MapLibre map. Core feeds work with no API keys.
+      Osiris Command is amineux’s personal OSINT command center. It aggregates
+      real-time global intelligence across aviation, maritime, CCTV, seismic
+      activity, wildfires, news, weather, space weather, cyber threats and
+      conflict zones on a GPU-accelerated MapLibre map. Core feeds work with
+      no API keys.
   tagline:
     en_us: Personal OSINT command center
   title:
-    en_us: Osiris HQ
-  icon: https://raw.githubusercontent.com/amineux/osiris-hq/master/public/casaos-icon.png
-  thumbnail: https://raw.githubusercontent.com/amineux/osiris-hq/master/public/og-image.png
+    en_us: Osiris Command
+  icon: https://raw.githubusercontent.com/amineux/osiris-command/master/public/casaos-icon.png
+  thumbnail: https://raw.githubusercontent.com/amineux/osiris-command/master/public/og-image.png
   screenshot_link:
-    - https://raw.githubusercontent.com/amineux/osiris-hq/master/public/og-image.png
+    - https://raw.githubusercontent.com/amineux/osiris-command/master/public/og-image.png
   scheme: http
   hostname: ""
   port_map: "3000"

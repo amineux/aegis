@@ -83,26 +83,11 @@ export default function GlobalStatusBar() {
               if (data.solana?.usd) prices.push({ symbol: 'SOL', price: data.solana.usd, change24h: data.solana.usd_24h_change });
               return { ok: true, json: async () => prices };
             }),
-          fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson')
-            .then(res => res.ok ? res.json() : Promise.reject('USGS error'))
+          fetch('/api/earthquakes')
+            .then(res => res.ok ? res.json() : Promise.reject('Earthquake API error'))
             .then(data => ({
               ok: true,
-              json: async () => ({
-                earthquakes: (data.features || []).map((f: any) => ({
-                  id: f.id,
-                  lat: f.geometry?.coordinates?.[1] || 0,
-                  lng: f.geometry?.coordinates?.[0] || 0,
-                  depth: f.geometry?.coordinates?.[2] || 0,
-                  magnitude: f.properties?.mag,
-                  place: f.properties?.place,
-                  time: f.properties?.time,
-                  url: f.properties?.url,
-                  tsunami: f.properties?.tsunami,
-                  type: f.properties?.type,
-                  felt: f.properties?.felt,
-                  alert: f.properties?.alert,
-                }))
-              })
+              json: async () => ({ earthquakes: data.earthquakes || [] }),
             })),
         ]);
 
@@ -141,8 +126,8 @@ export default function GlobalStatusBar() {
         
         {/* ── LEFT: Repo & docs ── */}
         <div className="flex-shrink-0 h-full flex items-center pointer-events-auto">
-          <a href="https://github.com/amineux/osiris-hq" target="_blank" rel="noopener noreferrer"
-            title="amineux / osiris-hq"
+          <a href="https://github.com/amineux/osiris-command" target="_blank" rel="noopener noreferrer"
+            title="amineux / osiris-command"
             aria-label="GitHub repository"
             className="h-full px-3 flex items-center gap-1.5 bg-[var(--gold-primary)]/10 text-[var(--gold-primary)]/80 hover:text-[var(--gold-primary)] hover:bg-[var(--gold-primary)]/20 border-r border-white/[0.04] transition-all duration-200"
           >

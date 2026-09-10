@@ -92,6 +92,30 @@ export function cachedSource<T>(
   };
 }
 
+/**
+ * Same TTL / inflight / stale-on-error behaviour for a single JSON value
+ * (earthquake payloads, stats, …) rather than a camera list.
+ */
+export function cachedJson<T>(
+  key: string,
+  fetcher: () => Promise<T>,
+  ttlMs: number = DEFAULT_TTL_MS,
+  isEmpty?: (value: T) => boolean,
+): () => Promise<T | null> {
+  const empty = isEmpty ?? ((value: T) => value == null);
+  return async () => {
+    const list = await cachedSource<T>(
+      key,
+      async () => {
+        const value = await fetcher();
+        return empty(value) ? [] : [value];
+      },
+      ttlMs,
+    )();
+    return list[0] ?? null;
+  };
+}
+
 /** Test seam — drops all cached indexes. */
 export function clearSourceCache(): void {
   store.clear();

@@ -1,15 +1,15 @@
 {
-  "name": "osiris-hq",
+  "name": "osiris-command",
   "version": "0.1.0",
   "private": true,
-  "description": "Osiris HQ — amineux’s personal OSINT command center. A standalone fork of the open-source OSIRIS dashboard (MIT).",
+  "description": "Osiris Command — amineux’s personal OSINT command center. MIT; based on the open-source OSIRIS dashboard by simplifaisoul.",
   "author": "amineux",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/amineux/osiris-hq.git"
+    "url": "https://github.com/amineux/osiris-command.git"
   },
-  "homepage": "https://github.com/amineux/osiris-hq",
+  "homepage": "https://github.com/amineux/osiris-command",
   "scripts": {
     "predev": "node tools/prepare-map-worker.mjs",
     "dev": "next dev",

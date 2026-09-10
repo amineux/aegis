@@ -20,8 +20,12 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import { applySettings, loadSavedSettings } from '@/lib/style-tokens';
 import SharePanel from '@/components/SharePanel';
 import ViewPresets from '@/components/ViewPresets';
+import MissionProfiles from '@/components/MissionProfiles';
 import KeyboardShortcuts from '@/components/KeyboardShortcuts';
 import GlobalStatusBar from '@/components/GlobalStatusBar';
+import { REPO_URL, PRODUCT_SHORT } from '@/lib/brand';
+import { DEFAULT_LAYERS, applyMissionProfile, type MissionProfile } from '@/lib/mission-profiles';
+import { parseShareSearch, buildShareSearch, resolveViewCenter } from '@/lib/view-snapshot';
 import LiveAlerts from '@/components/LiveAlerts';
 import WorldRemote from '@/components/WorldRemote';
 import ArcGISPanel from '@/components/ArcGISPanel';
@@ -288,43 +292,12 @@ export default function Dashboard() {
   const lastGeocodedPos = useRef<{ lat: number; lng: number } | null>(null);
 
   // ── DEFAULT: Most layers OFF — fast initial load ──
-  const [activeLayers, setActiveLayers] = useState({
-    flights: false,
-    private: false,
-    jets: false,
-    military: false,
-    maritime: true,
-    satellites: false,
-    sat_comms: false,
-    sat_military: false,
-    sat_navigation: false,
-    sat_earth: false,
-    sat_science: false,
-    balloons: false,
-    cctv: true,
-    /* The live preview tiles over the camera dots — see CctvPreviews. */
-    cctv_previews: true,
-    live_news: true,
-    earthquakes: true,
-    fires: false,
-    weather: false,
-    radiation: false,
-    infrastructure: false,
-    global_incidents: true,
-    war_alerts: false,
-    day_night: true,
-    cables: true,
-    sdk_sea: true,
-    sdk_air: true,
-    sdk_naval: true,
-    terrain_3d: false,
-    terrain_elevation: false,
-    malware: false,
-    cyber_attacks: false,
-    gdelt_events: false,
-    cf_outages: false,
-    cf_attacks: false,
-  });
+  const [activeLayers, setActiveLayers] = useState(() => ({ ...DEFAULT_LAYERS }));
+  const [missionId, setMissionId] = useState<string | null>('baseline');
+  const [feedsPaused, setFeedsPaused] = useState(false);
+  const feedsPausedRef = useRef(false);
+  feedsPausedRef.current = feedsPaused;
+  const [layerStatus, setLayerStatus] = useState<Record<string, 'loading' | 'ready' | 'error'>>({});
   // Server-side capability flags — gate layers that need credentials.
   const selectFlatMap = () => {
     setActiveLayers(prev => ({ ...prev, terrain_elevation: false, terrain_3d: false }));
@@ -351,16 +324,19 @@ export default function Dashboard() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Restore active layers from URL if present
-    const p = new URLSearchParams(window.location.search);
-    const layers = p.get('layers');
-    if (layers) {
-      const active = layers.split(',');
+    // Restore camera + layers from a shared URL when present
+    const shared = parseShareSearch(window.location.search);
+    if (shared.layers?.length) {
       setActiveLayers(prev => {
         const next = { ...prev };
-        Object.keys(next).forEach(k => { (next as any)[k] = active.includes(k); });
+        Object.keys(next).forEach(k => { next[k] = shared.layers!.includes(k); });
         return next;
       });
+      setMissionId(null);
+    }
+    if (shared.flyTo) {
+      autoLocateCancelled.current = true;
+      setFlyToLocation({ ...shared.flyTo, ts: Date.now() });
     }
 
     // Probe which credential-gated feeds this deployment has configured, so the
@@ -396,17 +372,17 @@ export default function Dashboard() {
     };
   }, []);
 
-  // URL state: persist active layers only (lat/lon comes from IP geolocation on each load)
+  // URL state: persist camera + active layers so a refresh or share lands on the same view
   const urlTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (urlTimer.current) clearTimeout(urlTimer.current);
     urlTimer.current = setTimeout(() => {
-      const active = Object.entries(activeLayers).filter(([,v]) => v).map(([k]) => k).join(',');
-      const url = `${window.location.pathname}?layers=${active}`;
+      const center = resolveViewCenter(mapView, mapCenter);
+      const url = `${window.location.pathname}?${buildShareSearch(center, activeLayers)}`;
       window.history.replaceState(null, '', url);
     }, 1500);
-  }, [activeLayers]);
+  }, [activeLayers, mapView, mapCenter]);
 
   // Global Stats Fetch
   useEffect(() => {
@@ -430,7 +406,7 @@ export default function Dashboard() {
       if (e.key === 'm') setShowMarkets(p => !p);
       if (e.key === 'c') setShowScmPanel(p => !p);
       if (e.key === 'i') setShowIntel(p => !p);
-      if (e.key === 's') { setShowDesktopSearch(p => !p); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowSpaceCam(false); }
+      if (e.key === 'p' && !e.ctrlKey && !e.metaKey) setFeedsPaused(p => !p);
       if (e.key === 'r' && !e.ctrlKey && !e.metaKey) setFlyToLocation({ lat: 20, lng: 0, zoom: 2.5, ts: Date.now() });
       if (e.key === 'g') {
         setActiveLayers(prev => ({ ...prev, terrain_elevation: false, terrain_3d: false }));
@@ -554,6 +530,12 @@ export default function Dashboard() {
     setDrawProgress(null);
   }, []);
 
+  const applyMission = useCallback((profile: MissionProfile) => {
+    setActiveLayers(prev => applyMissionProfile(prev, profile));
+    setMissionId(profile.id);
+    if (profile.flyTo) setFlyToLocation({ ...profile.flyTo, ts: Date.now() });
+  }, []);
+
   const handleExportGeoJSON = useCallback(() => {
     downloadFile(
       `osiris-aoi-${new Date().toISOString().slice(0, 10)}.geojson`,
@@ -573,22 +555,28 @@ export default function Dashboard() {
     options?: RequestInit,
     { skipWhenHidden = false }: { skipWhenHidden?: boolean } = {},
   ): Promise<boolean> => {
-    if (skipWhenHidden && typeof document !== 'undefined' && document.hidden) return false;
+    if (skipWhenHidden && (feedsPausedRef.current || (typeof document !== 'undefined' && document.hidden))) return false;
+    const key = url.split('?')[0].replace(/^\/api\//, '') || url;
+    setLayerStatus(s => (s[key] === 'ready' ? s : { ...s, [key]: 'loading' }));
     try {
-      // Force the browser to bypass its local disk cache for real-time data
-      const res = await fetch(url, { ...options, cache: 'no-store' });
+      // Honour route Cache-Control (earthquakes, news, maritime snapshots)
+      // instead of forcing a disk miss on every poll.
+      const res = await fetch(url, options);
       if (res.ok) {
         const json = await res.json();
         const d = transform ? transform(json) : json;
         dataRef.current = { ...dataRef.current, ...d };
         setDataVersion(v => v + 1);
         setBackendStatus('connected');
+        setLayerStatus(s => ({ ...s, [key]: 'ready' }));
         return true;
       }
+      setLayerStatus(s => ({ ...s, [key]: 'error' }));
       return false;
     } catch (e) {
       console.warn('[OSIRIS] Suppressed error:', e instanceof Error ? e.message : e);
       setBackendStatus('error');
+      setLayerStatus(s => ({ ...s, [key]: 'error' }));
       return false;
     }
   }, []);
@@ -596,9 +584,9 @@ export default function Dashboard() {
   // ── PROGRESSIVE DATA LOADING (request-optimized) ──
   useEffect(() => {
     // Priority 1: Core feeds (always needed for panels)
-    const eqUrl = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson';
-    const eqTransform = (data: any) => ({ earthquakes: (data.features || []).map((f: any) => ({ id: f.id, lat: f.geometry?.coordinates?.[1] || 0, lng: f.geometry?.coordinates?.[0] || 0, depth: f.geometry?.coordinates?.[2] || 0, magnitude: f.properties?.mag, place: f.properties?.place, time: f.properties?.time, url: f.properties?.url, tsunami: f.properties?.tsunami, type: f.properties?.type, felt: f.properties?.felt, alert: f.properties?.alert })) });
-    fetchEndpoint(eqUrl, eqTransform);
+    // Earthquakes go through /api/earthquakes so the map and ticker share one cached USGS hop.
+    const eqTransform = (d: any) => ({ earthquakes: d.earthquakes || [] });
+    fetchEndpoint('/api/earthquakes', eqTransform);
     fetchEndpoint('/api/news');
     /* A cold start can time out every upstream quote and return an all-empty
        feed. Waiting a full poll interval to find out leaves the panel blank for
@@ -622,7 +610,7 @@ export default function Dashboard() {
 
     // Polling — OPTIMIZED intervals to minimize edge requests
     const intervals = [
-      setInterval(() => fetchEndpoint(eqUrl, eqTransform, undefined, { skipWhenHidden: true }), 900000),  // 15 min (was 5)
+      setInterval(() => fetchEndpoint('/api/earthquakes', eqTransform, undefined, { skipWhenHidden: true }), 900000),  // 15 min
       setInterval(() => fetchEndpoint('/api/news', undefined, undefined, { skipWhenHidden: true }), 1800000),        // 30 min (was 10)
       setInterval(() => fetchEndpoint('/api/markets', d => ({ markets: d }), undefined, { skipWhenHidden: true }), 900000), // 15 min (was 5)
     ];
@@ -712,8 +700,7 @@ export default function Dashboard() {
     if (activeLayers.cables && !layerFetchedRef.current.has('cables')) {
       (async () => {
         try {
-          const ts = Date.now();
-      const res = await fetch(`/data/submarine-cables.json?v=${ts}`);
+          const res = await fetch('/data/submarine-cables.json');
           if (res.ok) {
              const cablesData = await res.json();
              dataRef.current = { ...dataRef.current, submarine_cables: cablesData.features };
@@ -762,9 +749,10 @@ export default function Dashboard() {
 
   // ── LAYER-AWARE POLLING — only poll data for active layers ──
   useEffect(() => {
+    if (feedsPaused) return;
     const intervals: ReturnType<typeof setInterval>[] = [];
     if (activeLayers.flights || activeLayers.military || activeLayers.jets || activeLayers.private) {
-      intervals.push(setInterval(() => fetchEndpoint('/api/flights'), 300000)); // 5 min (was 2 min)
+      intervals.push(setInterval(() => fetchEndpoint('/api/flights'), 300000)); // 5 min
     }
 
     if (activeLayers.balloons) {
@@ -774,17 +762,18 @@ export default function Dashboard() {
       intervals.push(setInterval(() => fetchEndpoint('/api/radiation', d => ({ radiation: d.stations })), 300000)); // 5m
     }
     if (activeLayers.maritime) {
-      intervals.push(setInterval(() => fetchEndpoint('/api/maritime', d => ({ maritime_ports: d.ports, maritime_chokepoints: d.chokepoints, maritime_ships: d.ships })), 10000)); // 10s
+      // Server snapshot is 5s; without AIS the payload is static. 45s is enough.
+      intervals.push(setInterval(() => fetchEndpoint('/api/maritime', d => ({ maritime_ports: d.ports, maritime_chokepoints: d.chokepoints, maritime_ships: d.ships })), 45000));
     }
     if ((activeLayers as any).cyber_attacks) {
       intervals.push(setInterval(() => {
         layerFetchedRef.current.delete('cyber_attacks');
         fetchEndpoint('/api/cyber-attacks', d => ({ cyber_attacks: d.attacks }));
         layerFetchedRef.current.add('cyber_attacks');
-      }, 10000)); // 10s — rapid refresh
+      }, 30000));
     }
     return () => intervals.forEach(clearInterval);
-  }, [activeLayers, fetchEndpoint]);
+  }, [activeLayers, fetchEndpoint, feedsPaused]);
 
   /* ── LIVE MALWARE — pushed over SSE while the layer is on ──
      Detections arrive when URLhaus reports them rather than on a timer, so
@@ -793,7 +782,7 @@ export default function Dashboard() {
      progressive geolocation fill, which is why a cold server paints the map in
      batches instead of staying empty and then snapping to full. */
   useEffect(() => {
-    if (!activeLayers.malware) return;
+    if (!activeLayers.malware || feedsPaused) return;
 
     const source = new EventSource('/api/malware/stream');
     // Keyed by address: a host re-reported with a new payload updates its node
@@ -850,7 +839,7 @@ export default function Dashboard() {
     };
 
     return () => source.close();
-  }, [activeLayers.malware]);
+  }, [activeLayers.malware, feedsPaused]);
 
   // CCTV: loaded once on layer toggle via layerFetchedRef (no viewport polling)
 
@@ -1037,9 +1026,9 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* ── Osiris HQ title — letter-by-letter stagger ── */}
+            {/* ── Osiris Command title — letter-by-letter stagger ── */}
             <div className="flex items-center gap-[2px] mb-3 z-[2]">
-              {'OSIRIS HQ'.split('').map((letter, i) => (
+              {PRODUCT_SHORT.split('').map((letter, i) => (
                 <motion.span
                   key={i}
                   initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
@@ -1062,7 +1051,7 @@ export default function Dashboard() {
                 className="overflow-hidden whitespace-nowrap"
               >
                 <p className="text-[11px] md:text-[10px] font-mono tracking-[0.5em] text-[var(--gold-primary)]" style={{ opacity: 0.8 }}>
-                  AMINEUX · PERSONAL COMMAND CENTER
+                  AMINEUX · PERSONAL OSINT GRID
                 </p>
               </motion.div>
             </div>
@@ -1083,10 +1072,10 @@ export default function Dashboard() {
               {/* Status messages — cycling */}
               <div className="mt-3 h-4 flex items-center justify-center">
                 {[
-                  { text: 'ESTABLISHING SECURE CONNECTION...', delay: 0.5 },
-                  { text: 'INITIALIZING FEEDS...', delay: 1.1 },
-                  { text: 'CALIBRATING SENSORS...', delay: 1.7 },
-                  { text: 'SYSTEM READY', delay: 2.2 },
+                  { text: 'BRINGING FEEDS ONLINE...', delay: 0.5 },
+                  { text: 'LINKING AVIATION · SEISMIC · CCTV...', delay: 1.1 },
+                  { text: 'HUD LOCKED', delay: 1.7 },
+                  { text: 'COMMAND READY', delay: 2.2 },
                 ].map((stage, i) => (
                   <motion.span
                     key={i}
@@ -1293,8 +1282,8 @@ export default function Dashboard() {
             <path d="m140.86,465.53c-6.7333,0-8.7137-5.4462-12.181-25.899-2.4479-14.774-7.1068-28.463-10.502-43.043-3.0219-13.117-5.6425-20.332-9.6694-26.618-6.5526-10.229-6.3011-20.921,0.71691-30.481,6.33-8.6232,6.827-11.121,6.5471-32.901-0.13783-10.725-0.56403-21.286-0.94711-23.468-0.88077-5.0179-4.6148-7.6923-13.904-9.9586-8.4827-2.0695-16.525-2.2933-41.967-1.1681-18.144,0.80245-20.457,0.72323-22.75-0.77901-5.627-3.687-2.9527-8.8405,12.261-23.626,15.69-15.249,23.876-24.688,38.811-44.75,26.839-36.053,30.927-40.83,57.501-49.189,19.575-6.1582,26.691-9.0119,62.031-10.06,24.654-0.7309,38.767,2.5963,45.357,3.3466,25.219,2.8716,66.247,14.877,91.933,26.083,13.581,5.9249,14.042,6.1723,30.115,16.152,11.981,7.4391,18.733,10.459,35.44,15.034,34.886,9.553,56.753,7.7583,92,10.378,9.2579,0.68808,49.298,3.5149,74.5,4.4784,30.689,1.1732,35.835-2.0376,38.423,0.54994,2.0315,2.0315,0.5636,8.1815,0.6024,14.306,0.0237,3.7378-0.18399,7.6642-0.48569,11.602-8.1923-1.424-8.0353-1.3676-26.54-2.9165-1.6808-0.14069-16.718-1.6695-44.5-4.1726-11.867-1.0692-70.326-2.8448-105.5-3.9248-16.997-0.52189-34.357-4.7228-51-1.2347-5.7624,1.2076,2.387-1.1161-16,7.4812-36.313,14.051-55.853,23.79-104.5,32.83-30.774,4.5201-33.208,4.9745-36.376,7.2909-1.7456,1.2764-1.662,1.6171,1.6767,6.8363,3.5642,5.5717,14.275,15.81,29.699,28.389,51.619,43.564,115.05,77.431,162.89,98.598,22.221,9.5122,37.55,14.655,50.108,16.811,61.892,13.654,134.26-9.4938,136.11-56.959,0.0489-1.256,0.49928-6.001-0.1398-12.079-0.44539-4.2357-0.89625-7.3216-2.2932-11.095-3.9795-10.75-12.413-20.407-28.672-21.755-11.746,0.022-20.375,6.1561-23.95,16.17-4.5622,12.78,1.3185,27.071,14.023,29.565,6.6403,1.3038,11.222-0.5256,14.271-4.4679,3.3424-4.3221,3.72-12.026,1.3559-15.634-2.2757-3.4732-7.2459-5.2754-10.824-3.9248-3.6125,1.3636-4.9933,0.36555-0.6538-3.1839,0.38036-0.24867,0.77844-0.4586,1.191-0.63136,6.6675-2.7918,17.127,4.1226,17.913,14.135,0.7119,11.495-7.7045,20.279-19.249,20.94-6.5659,0.37574-14.594-1.9665-20.026-7.8035-13.425-14.428-9.1712-34.885,2.9586-45.762,4.6131-4.1366,7.7535-6.0583,14.065-7.4773,19.37-4.3554,37.69,4.5134,45.528,24.301,3.5645,8.9992,3.7675,16.201,3.8515,23.221,0.70438,58.895-65.742,87.202-131.95,82.517-28.009-2.4123-46.229-6.8095-80.495-20.915-36.58-12.09-143.44-68.32-207.96-120.33-18.846-15.317-30.511-22.813-33.055-21.24-0.61585,0.38062-0.98989,11.992-0.99221,30.802-0.004,28.758-0.1019,30.352-2.0717,33.583-3.2793,5.3791-4.935,17.725-5.9822,44.608-1.6327,41.914-2.675,60.915-3.4439,62.778-1.3963,3.383-7.0306,4.6642-13.289,4.6642zm221.62-252.27c0.41803-2.1707-4.6044-8.6243-11.231-13.08-10.396-6.9893-22.385-11.512-34.092-15.96-71.934-23.518-145.08-20.065-174.03-4.962-10.593,5.1512-14.126,7.777-22.813,15.582-4.1291,3.7102-9.5939,9.7305-12.144,13.379-5.133,7.3428-10.014,13.339-19.014,23.362-9.3026,10.359-14.5,16.774-14.5,17.897,0,1.5721,7.8962,3.1488,17.5,3.5809,81.15,10.292,230.44,14.198,270.32-39.799zm224.18-69.351c-16.558-0.50003-42.467-2.0158-63.5-4.8954-19.525-2.6732-39.047-6.067-58-11.467-17.982-5.123-35.124-12.85-52.5-19.754-7.7243-3.0694-15.32-6.4533-23-9.6318-8.319-3.4429-16.53-7.1723-25-10.224-15.523-5.5928-30.986-11.946-47.239-14.789-41.988-7.3464-85.261-8.7793-127.76-5.4986-23.554,1.8182-46.695,7.7124-69.5,13.878-17.863,4.8293-35.019,11.972-52.5,18.041-5.069,1.761-10.039,6.841-15.177,5.321-5.396-1.6-10.73-7.749-10.317-13.361,0.434-5.884,7.835-9.014,12.753-12.272,16.823-11.146,36.498-17.485,55.661-23.803,19.219-6.3349,38.923-12.127,59.072-14.001,54.326-5.0532,110.09-3.4301,163.5,7.7269,28.29,5.9098,53.945,20.759,81,30.92,31.437,11.806,61.76,27.444,94.5,34.909,33.045,7.534,83.745,9.6292,101.22,9.5911,6.5425-0.0143,6.7685,0.0708,8.3595,3.1475,1.8515,3.5805,3.1256,14.296,1.7926,15.077-1.3395,0.78418-21.593,1.4453-33.376,1.0894z" />
           </svg>
           <div className="flex flex-col items-start gap-0.5">
-            <h1 className="text-lg md:text-xl font-bold tracking-[0.4em] text-[#D4AF37] font-mono">OSIRIS HQ</h1>
-            <span className="text-[9px] md:text-[10px] font-mono tracking-[0.2em] opacity-80 uppercase text-[#D4AF37]">AMINEUX COMMAND CENTER</span>
+            <h1 className="text-lg md:text-xl font-bold tracking-[0.28em] text-[#D4AF37] font-mono">OSIRIS COMMAND</h1>
+            <span className="text-[9px] md:text-[10px] font-mono tracking-[0.2em] opacity-80 uppercase text-[#D4AF37]">AMINEUX · PERSONAL OSINT GRID</span>
           </div>
         </div>
         <div className="flex items-center gap-3 mt-1.5 pl-[44px] min-w-0 pr-4">
@@ -1312,7 +1301,7 @@ export default function Dashboard() {
           <ZuluClock />
         </span>
 
-        <span className="flex items-center gap-1" title="Backend connection status">STATUS: <span className={backendStatus === 'connected' ? 'text-[var(--alert-green)]' : 'text-[var(--alert-red)]'}>{backendStatus === 'connected' ? 'LIVE' : backendStatus.toUpperCase()}</span></span>
+        <span className="flex items-center gap-1" title="Backend connection status">STATUS: <span className={feedsPaused ? 'text-[var(--gold-primary)]' : backendStatus === 'connected' ? 'text-[var(--alert-green)]' : 'text-[var(--alert-red)]'}>{feedsPaused ? 'PAUSED' : backendStatus === 'connected' ? 'LIVE' : backendStatus.toUpperCase()}</span></span>
 
         <span className="hidden lg:inline-flex items-center gap-1" title="Number of active data layers">
           <span className="text-[var(--cyan-primary)] font-bold">{Object.values(activeLayers).filter(Boolean).length}</span>
@@ -1326,9 +1315,18 @@ export default function Dashboard() {
 
         {spaceWeather && <span className="hidden lg:inline" title={`Geomagnetic Storm Index — Kp${spaceWeather.kp_index}`}>SOLAR: <span style={{ color: spaceWeather.storm_color, fontWeight: 700 }}>Kp{spaceWeather.kp_index}</span></span>}
 
-        <span className="text-[11px] font-bold tracking-[0.2em] text-[var(--text-muted)] opacity-50">HQ</span>
+        <span className="text-[11px] font-bold tracking-[0.2em] text-[var(--text-muted)] opacity-50">CMD</span>
 
-        <a href="https://github.com/amineux/osiris-hq" target="_blank" rel="noopener noreferrer" className="pointer-events-auto glass-panel px-3 py-1.5 flex items-center gap-1.5 text-[9px] font-mono tracking-widest hover:opacity-80 transition-opacity border-[var(--gold-primary)]/40 bg-[var(--gold-primary)]/10 ml-3 shadow-[0_0_10px_rgba(255,215,0,0.1)]">
+        <button
+          type="button"
+          onClick={() => setFeedsPaused(p => !p)}
+          title={feedsPaused ? 'Resume live feeds (P)' : 'Pause live feeds (P)'}
+          className="pointer-events-auto glass-panel px-2 py-1 text-[9px] font-mono tracking-widest border-[var(--border-primary)] hover:border-[var(--gold-primary)]/40"
+        >
+          {feedsPaused ? 'RESUME' : 'PAUSE'}
+        </button>
+
+        <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="pointer-events-auto glass-panel px-3 py-1.5 flex items-center gap-1.5 text-[9px] font-mono tracking-widest hover:opacity-80 transition-opacity border-[var(--gold-primary)]/40 bg-[var(--gold-primary)]/10 ml-1 shadow-[0_0_10px_rgba(255,215,0,0.1)]">
           <div className="w-1.5 h-1.5 rounded-full bg-[var(--gold-primary)] animate-osiris-pulse" />
           <span className="text-[var(--gold-primary)] font-bold">AMINEUX</span>
         </a>
@@ -1339,7 +1337,14 @@ export default function Dashboard() {
           place would put the owner badge underneath the destination field. */}
       {isMobile && !showDirections && !navSession && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.5 }} className="absolute top-3 right-3 z-[200] pointer-events-auto flex items-center gap-2">
-          <a href="https://github.com/amineux/osiris-hq" target="_blank" rel="noopener noreferrer" className="glass-panel px-2 py-1 flex items-center gap-1.5 text-[9px] font-mono tracking-widest hover:opacity-80 transition-opacity border-[var(--gold-primary)]/40 bg-[var(--gold-primary)]/10">
+          <button
+            type="button"
+            onClick={() => setFeedsPaused(p => !p)}
+            className="glass-panel px-2 py-1 text-[9px] font-mono tracking-widest"
+          >
+            {feedsPaused ? 'RESUME' : 'PAUSE'}
+          </button>
+          <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="glass-panel px-2 py-1 flex items-center gap-1.5 text-[9px] font-mono tracking-widest hover:opacity-80 transition-opacity border-[var(--gold-primary)]/40 bg-[var(--gold-primary)]/10">
             <div className="w-1 h-1 rounded-full bg-[var(--gold-primary)] animate-osiris-pulse" />
             <span className="text-[var(--gold-primary)] font-bold">AMINEUX</span>
           </a>
@@ -1349,7 +1354,15 @@ export default function Dashboard() {
 
 
       {/* ── NEW SIDEBAR (Root Level) ── */}
-      {showLayers && !isMobile && <LayerPanel {...terrainPanelProps} data={data} activeLayers={activeLayers} setActiveLayers={setActiveLayers} theme={osirisTheme} setTheme={setOsirisTheme} capabilities={capabilities} />}
+      {showLayers && !isMobile && <LayerPanel {...terrainPanelProps} data={data} activeLayers={activeLayers} setActiveLayers={(updater) => { setMissionId(null); setActiveLayers(updater); }} theme={osirisTheme} setTheme={setOsirisTheme} capabilities={capabilities} layerStatus={layerStatus} />}
+
+      {!isMobile && (
+        <div className="absolute top-[88px] left-[60px] z-[220] w-[280px] pointer-events-none">
+          <div className="pointer-events-auto">
+            <MissionProfiles activeId={missionId} onApply={applyMission} />
+          </div>
+        </div>
+      )}
 
 
 
@@ -1481,7 +1494,15 @@ export default function Dashboard() {
           <AnimatePresence>
             {showDesktopSearch && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="absolute right-12 top-1/2 -translate-y-1/2 w-80">
-                <SearchBar alwaysExpanded onLocate={(lat, lng, zoom) => { setFlyToLocation({ lat, lng, zoom, ts: Date.now() }); setShowDesktopSearch(false); }} />
+                <SearchBar
+                  alwaysExpanded
+                  entities={data}
+                  bias={mapCenter}
+                  onLocate={(lat, lng, zoom) => { setFlyToLocation({ lat, lng, zoom, ts: Date.now() }); setShowDesktopSearch(false); }}
+                />
+                <div className="relative mt-2 flex justify-end">
+                  <SharePanel mapView={mapView} activeLayers={activeLayers} mapCenter={mapCenter} data={data} compact />
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -1712,7 +1733,7 @@ export default function Dashboard() {
                 <div className="px-3 pb-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="hud-text text-[10px] text-[var(--text-primary)]">
-                      {mobilePanel === 'layers' ? 'LAYERS & STATS' : mobilePanel === 'markets' ? 'MARKETS & INTEL' : mobilePanel === 'intel' ? 'INTEL FEED' : mobilePanel === 'recon' ? 'HQ RECON' : mobilePanel === 'remote' ? 'WORLD REMOTE' : 'SEARCH'}
+                      {mobilePanel === 'layers' ? 'LAYERS & STATS' : mobilePanel === 'markets' ? 'MARKETS & INTEL' : mobilePanel === 'intel' ? 'INTEL FEED' : mobilePanel === 'recon' ? 'COMMAND RECON' : mobilePanel === 'remote' ? 'WORLD REMOTE' : 'SEARCH'}
                     </span>
                     <button onClick={() => setMobilePanel(null)} className="text-[var(--text-muted)] p-1"><X className="w-4 h-4" /></button>
                   </div>
@@ -1727,7 +1748,10 @@ export default function Dashboard() {
                           <div><div className="hud-label" style={{fontSize:'9px'}}>NUC</div><div className="hud-value text-[10px]" style={{color:'var(--accent-nuclear)'}}>{(data.infrastructure?.length||0)}</div></div>
                         </div>
                       </div>
-                      <LayerPanel {...terrainPanelProps} data={data} activeLayers={activeLayers} setActiveLayers={setActiveLayers} isMobile={true} theme={osirisTheme} setTheme={setOsirisTheme} capabilities={capabilities} />
+                      <div className="mb-3">
+                        <MissionProfiles compact activeId={missionId} onApply={(p) => { applyMission(p); setMobilePanel(null); }} />
+                      </div>
+                      <LayerPanel {...terrainPanelProps} data={data} activeLayers={activeLayers} setActiveLayers={(updater) => { setMissionId(null); setActiveLayers(updater); }} isMobile={true} theme={osirisTheme} setTheme={setOsirisTheme} capabilities={capabilities} layerStatus={layerStatus} />
                       <div className="mt-8">
                         <ViewPresets onNavigate={(lat, lng, zoom) => { setFlyToLocation({ lat, lng, zoom, ts: Date.now() }); setMobilePanel(null); }} />
                       </div>
@@ -1737,8 +1761,14 @@ export default function Dashboard() {
                   {mobilePanel === 'intel' && <IntelFeed data={data} onLocate={(lat, lng) => { setFlyToLocation({ lat, lng, ts: Date.now() }); setMobilePanel(null); }} />}
                   {mobilePanel === 'search' && (
                     <div className="space-y-2">
-                      <SearchBar onLocate={(lat, lng, zoom) => { setFlyToLocation({ lat, lng, zoom, ts: Date.now() }); setMobilePanel(null); }} />
-                      <SharePanel mapView={mapView} activeLayers={activeLayers} mouseCoords={null} />
+                      <SearchBar
+                        entities={data}
+                        bias={mapCenter}
+                        onLocate={(lat, lng, zoom) => { setFlyToLocation({ lat, lng, zoom, ts: Date.now() }); setMobilePanel(null); }}
+                      />
+                      <div className="relative">
+                        <SharePanel mapView={mapView} activeLayers={activeLayers} mapCenter={mapCenter} data={data} compact />
+                      </div>
                     </div>
                   )}
                   {mobilePanel === 'recon' && (
@@ -1885,7 +1915,7 @@ export default function Dashboard() {
 
       {/* Shortcut hint — more visible */}
       <div className="desktop-only absolute bottom-[26px] right-5 z-[200] pointer-events-none text-[9px] font-mono text-[var(--text-muted)] opacity-50 tracking-widest" title="Press ? to see all keyboard shortcuts">
-        Press <span className="text-[var(--gold-primary)] opacity-80">?</span> for shortcuts · <span className="text-[var(--gold-primary)] opacity-80">F</span> fullscreen · <span className="text-[var(--gold-primary)] opacity-80">R</span> reset view
+        Press <span className="text-[var(--gold-primary)] opacity-80">?</span> for shortcuts · <span className="text-[var(--gold-primary)] opacity-80">P</span> pause feeds · <span className="text-[var(--gold-primary)] opacity-80">Ctrl+F</span> locate
       </div>
 
 

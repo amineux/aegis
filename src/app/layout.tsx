@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import ErrorBoundary from '@/components/ErrorBoundary';
 import "./globals.css";
+import {
+  AUTHOR, PRODUCT_NAME, PRODUCT_SHORT, PRODUCT_TAGLINE, REPO_URL,
+} from '@/lib/brand';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-const REPO_URL = "https://github.com/amineux/osiris-hq";
-const SITE_NAME = "Osiris HQ";
-const SITE_TITLE = "Osiris HQ — Personal OSINT Command Center | Live Flights, CCTV & Recon";
-const SITE_DESCRIPTION = "amineux’s personal OSINT command center. Track aircraft, satellites, and worldwide CCTV on a 3D globe. DNS, WHOIS, sanctions, earthquakes, wildfires, news, and conflict layers — self-hosted, no required API keys. Based on the open-source OSIRIS project.";
+const SITE_TITLE = `${PRODUCT_NAME} — ${PRODUCT_TAGLINE} | Live Flights, CCTV & Recon`;
+const SITE_DESCRIPTION = `${AUTHOR}’s personal OSINT command center. Track aircraft, satellites, and worldwide CCTV on a 3D globe. DNS, WHOIS, sanctions, earthquakes, wildfires, news, and conflict layers — self-hosted, no required API keys.`;
 
 export const viewport: Viewport = {
   themeColor: "#D4AF37",
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: SITE_TITLE,
-    template: "%s | Osiris HQ",
+    template: `%s | ${PRODUCT_NAME}`,
   },
   description: SITE_DESCRIPTION,
   keywords: [
@@ -34,11 +35,11 @@ export const metadata: Metadata = {
     "CCTV cameras live",
     "earthquake monitor", "USGS earthquake",
     "wildfire tracker", "NASA FIRMS",
-    "Osiris HQ", "amineux", "osiris-hq",
+    PRODUCT_NAME, AUTHOR, "osiris-command",
   ],
-  authors: [{ name: "amineux", url: REPO_URL }],
-  creator: "amineux",
-  publisher: "amineux",
+  authors: [{ name: AUTHOR, url: REPO_URL }],
+  creator: AUTHOR,
+  publisher: AUTHOR,
   robots: {
     index: true,
     follow: true,
@@ -73,10 +74,10 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Osiris HQ — Personal OSINT Command Center",
-    description: "amineux’s self-hosted intelligence dashboard. Live flights, CCTV, satellites, earthquakes, wildfires, news, and recon tools. No API keys required for core feeds.",
+    title: `${PRODUCT_NAME} — ${PRODUCT_TAGLINE}`,
+    description: `${AUTHOR}’s self-hosted intelligence dashboard. Live flights, CCTV, satellites, earthquakes, wildfires, news, and recon tools. No API keys required for core feeds.`,
     type: "website",
-    siteName: SITE_NAME,
+    siteName: PRODUCT_NAME,
     locale: "en_US",
     url: "/",
     images: [
@@ -84,15 +85,15 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Osiris HQ — Personal OSINT command center",
+        alt: `${PRODUCT_NAME} — ${PRODUCT_TAGLINE}`,
         type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Osiris HQ — Personal OSINT Command Center",
-    description: "amineux’s self-hosted OSINT dashboard. Live flights, CCTV, satellites, and recon tools.",
+    title: `${PRODUCT_NAME} — ${PRODUCT_TAGLINE}`,
+    description: `${AUTHOR}’s self-hosted OSINT dashboard. Live flights, CCTV, satellites, and recon tools.`,
     images: ["/og-image.png"],
   },
   category: "technology",
@@ -100,7 +101,7 @@ export const metadata: Metadata = {
   other: {
     "apple-mobile-web-app-capable": "yes",
     "apple-mobile-web-app-status-bar-style": "black-translucent",
-    "apple-mobile-web-app-title": "Osiris HQ",
+    "apple-mobile-web-app-title": PRODUCT_NAME,
     "mobile-web-app-capable": "yes",
     "msapplication-TileColor": "#06060C",
     "msapplication-config": "none",
@@ -110,8 +111,8 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "Osiris HQ",
-  alternateName: ["Osiris HQ", "OSIRIS HQ", "amineux OSINT"],
+  name: PRODUCT_NAME,
+  alternateName: [PRODUCT_NAME, PRODUCT_SHORT, `${AUTHOR} OSINT`],
   url: REPO_URL,
   description: SITE_DESCRIPTION,
   applicationCategory: "SecurityApplication",
@@ -136,11 +137,12 @@ const jsonLd = {
     "OFAC SDN sanctions search",
     "Interactive 3D globe with day/night cycle",
     "Region intelligence dossier reports",
+    "Mission profiles for disaster, aviation, and conflict watch",
   ],
   screenshot: "/og-image.png",
   author: {
     "@type": "Person",
-    name: "amineux",
+    name: AUTHOR,
     url: REPO_URL,
   },
 };
@@ -168,7 +170,7 @@ export default function RootLayout({
 
       </head>
       <body className="antialiased">
-        <ErrorBoundary name="Osiris HQ">
+        <ErrorBoundary name={PRODUCT_NAME}>
           {children}
         </ErrorBoundary>
       </body>

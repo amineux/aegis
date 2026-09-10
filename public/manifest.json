@@ -1,6 +1,6 @@
 {
-  "name": "Osiris HQ — Personal OSINT Command Center",
-  "short_name": "Osiris HQ",
+  "name": "Osiris Command — Personal OSINT Command Center",
+  "short_name": "Osiris Command",
   "description": "amineux’s personal OSINT dashboard. Live flights, CCTV, earthquakes, wildfires, news, and recon tools on a 3D globe.",
   "start_url": "/",
   "display": "standalone",

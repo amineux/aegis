@@ -3,17 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Keyboard, X } from 'lucide-react';
-
-const SHORTCUTS = [
-  { key: 'F', desc: 'Toggle fullscreen' },
-  { key: 'S', desc: 'Share current view' },
-  { key: 'L', desc: 'Toggle layer panel' },
-  { key: 'M', desc: 'Toggle markets panel' },
-  { key: 'I', desc: 'Toggle intel feed' },
-  { key: 'R', desc: 'Reset to global view' },
-  { key: '?', desc: 'Show this help' },
-  { key: 'ESC', desc: 'Close panels / popups' },
-];
+import { SHORTCUTS } from '@/lib/shortcuts';
 
 export default function KeyboardShortcuts() {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,7 +31,7 @@ export default function KeyboardShortcuts() {
           <div className="absolute inset-0 bg-[var(--bg-void)]/80 backdrop-blur-sm" />
           <motion.div
             onClick={e => e.stopPropagation()}
-            className="relative glass-panel p-6 w-[320px] osiris-glow"
+            className="relative glass-panel p-6 w-[340px] osiris-glow"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
