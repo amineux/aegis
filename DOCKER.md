@@ -1,8 +1,8 @@
-# Self-hosting Osiris HQ with Docker
+# Self-hosting Osiris Command with Docker
 
-Osiris HQ ships as a self-contained Next.js standalone build. This is
-[amineux](https://github.com/amineux)’s personal command center — a standalone
-derivative of [OSIRIS](https://github.com/simplifaisoul/osiris) (MIT).
+Osiris Command ships as a self-contained Next.js standalone build — amineux’s
+personal command center. Core feeds run without API keys. The repository
+includes MIT-licensed work from [OSIRIS](https://github.com/simplifaisoul/osiris).
 
 > **TL;DR:** Core feeds run **without any API keys**. Aviation, satellites,
 > fires, earthquakes, weather, news, CCTV, and CVEs use public sources. Keys
@@ -12,8 +12,8 @@ derivative of [OSIRIS](https://github.com/simplifaisoul/osiris) (MIT).
 ## 1. Docker Compose (recommended)
 
 ```bash
-git clone https://github.com/amineux/osiris-hq.git
-cd osiris-hq
+git clone https://github.com/amineux/osiris-command.git
+cd osiris-command
 
 # optional: keys / scanner / host port
 cp .env.example .env
@@ -25,8 +25,7 @@ Open <http://localhost:3000>.
 
 What the compose file does:
 
-- **`osiris`** — builds locally from the `Dockerfile` so you run this clone,
-  not an upstream registry image.
+- **`osiris`** — builds locally from the `Dockerfile` so you run this clone.
 - **`osiris-cache`** — nginx on host port `8080` for compressed API / tile
   caching. Optional for a first look; the UI on `3000` works without it.
 - **`osiris-intel`** — ontology sidecar on host port `4000`.
@@ -48,8 +47,8 @@ docker compose down
 ### Plain `docker run` (UI only)
 
 ```bash
-docker build -t osiris-hq:latest .
-docker run -d --name osiris-hq -p 3000:3000 --env-file .env --restart unless-stopped osiris-hq:latest
+docker build -t osiris-command:latest .
+docker run -d --name osiris-command -p 3000:3000 --env-file .env --restart unless-stopped osiris-command:latest
 ```
 
 If `.env` does not exist yet, drop `--env-file .env`.
@@ -65,24 +64,24 @@ Multi-stage build on `node:22-alpine`, runs as `nextjs` (uid 1001), serves
 The compose file includes an `x-casaos:` block (title, description, icon, port
 map, env descriptions) that plain Compose ignores.
 
-1. Clone this repo somewhere persistent (for example `/DATA/AppData/osiris-hq`).
+1. Clone this repo somewhere persistent (for example `/DATA/AppData/osiris-command`).
 2. CasaOS → **Install a customized app** → paste `docker-compose.yml`, or run
    `docker compose up -d --build` from the clone.
 3. The UI is on host port `3000` (or `OSIRIS_PORT`).
 
 Icon and screenshots are served from this repo:
 
-`https://raw.githubusercontent.com/amineux/osiris-hq/master/public/casaos-icon.png`
+`https://raw.githubusercontent.com/amineux/osiris-command/master/public/casaos-icon.png`
 
 CasaOS stores imported compose files under `/var/lib/casaos/apps/`, so a
 relative `build:` context may not resolve there. If importing the YAML
 directly, build first:
 
 ```bash
-docker build -t osiris-hq:latest /path/to/osiris-hq
+docker build -t osiris-command:latest /path/to/osiris-command
 ```
 
-then point the service at `image: osiris-hq:latest` instead of `build:`.
+then point the service at `image: osiris-command:latest` instead of `build:`.
 
 ## 3. API keys and data sources
 

@@ -1,10 +1,10 @@
 <div align="center">
 
-# Osiris HQ
+# Osiris Command
 
 ### Personal OSINT command center — by [amineux](https://github.com/amineux)
 
-[![GitHub](https://img.shields.io/badge/amineux%2Fosiris--hq-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/amineux/osiris-hq)
+[![GitHub](https://img.shields.io/badge/amineux%2Fosiris--command-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/amineux/osiris-command)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
 [![MapLibre](https://img.shields.io/badge/MapLibre_GL-GPU_Rendered-396CB2?style=for-the-badge)](https://maplibre.org)
@@ -16,13 +16,13 @@
 
 ---
 
-Osiris HQ is **amineux**’s personal standalone command center. It is based on the open-source [OSIRIS](https://github.com/simplifaisoul/osiris) project by [simplifaisoul](https://github.com/simplifaisoul) (MIT). Core map feeds run with **no API keys**.
+Osiris Command is **amineux**’s personal standalone command center. Core map feeds run with **no API keys**. The codebase includes MIT-licensed work originally published as [OSIRIS](https://github.com/simplifaisoul/osiris) by [simplifaisoul](https://github.com/simplifaisoul).
 
 ## Quick start (Docker)
 
 ```bash
-git clone https://github.com/amineux/osiris-hq.git
-cd osiris-hq
+git clone https://github.com/amineux/osiris-command.git
+cd osiris-command
 cp .env.example .env          # optional — keys, scanner, host port
 docker compose up -d --build
 ```
@@ -44,8 +44,8 @@ docker compose down           # stop
 Needs Node 20+ (npm or pnpm). No database.
 
 ```bash
-git clone https://github.com/amineux/osiris-hq.git
-cd osiris-hq
+git clone https://github.com/amineux/osiris-command.git
+cd osiris-command
 npm install                   # or: pnpm install
 npm run dev                   # http://localhost:3000
 ```
@@ -89,7 +89,7 @@ Generate a scanner secret with `openssl rand -hex 32`. `.env` is gitignored.
 | **Sanctions** | Person / org / vessel SDN search | OpenSanctions |
 | **Telegram** | Geoparsed public-channel posts | `t.me/s/<channel>` previews |
 
-The HUD exposes toggleable layers, a RECON toolkit (DNS, WHOIS, IP intel, certs, sanctions, optional port scan), live news, and region dossiers. Nothing in this fork requires a meme-coin wallet or a third-party “support” click-through.
+The HUD exposes mission profiles (Disaster, Aviation, Conflict, Maritime, Space), toggleable layers, a RECON toolkit (DNS, WHOIS, IP intel, certs, sanctions, optional port scan), live news, and region dossiers. Pause expensive live feeds with `P`. Nothing here requires a meme-coin wallet or a third-party “support” click-through.
 
 ## Keyboard shortcuts
 
@@ -99,8 +99,11 @@ The HUD exposes toggleable layers, a RECON toolkit (DNS, WHOIS, IP intel, certs,
 | `S` | Share current view |
 | `L` | Toggle layer panel |
 | `M` | Toggle markets panel |
-| `I` | Toggle intel feed |
+| `I` | Toggle RECON toolkit |
+| `P` | Pause / resume live feeds |
+| `G` | Toggle globe / flat map |
 | `R` | Reset to global view |
+| `Ctrl+F` | Locate places and entities |
 | `?` | Show this list |
 | `Escape` | Close panels |
 
@@ -112,6 +115,6 @@ Next.js 16 (App Router) · TypeScript 5 · MapLibre GL · Framer Motion · Docke
 
 MIT — see [LICENSE](LICENSE).
 
-Osiris HQ is a personal derivative of [OSIRIS](https://github.com/simplifaisoul/osiris) by [simplifaisoul](https://github.com/simplifaisoul). Upstream remains MIT; this repo keeps that license and adds amineux’s branding and hosting notes.
+Copyright (c) 2026 amineux and simplifaisoul. Osiris Command includes MIT-licensed work from [OSIRIS](https://github.com/simplifaisoul/osiris).
 
 Use the tools only on systems you own or are authorized to monitor. See [SECURITY.md](SECURITY.md).

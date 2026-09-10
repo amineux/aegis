@@ -25,7 +25,7 @@ export async function GET(req: Request) {
     const res = await safeFetch(url, {
       signal: AbortSignal.timeout(8000),
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; Osiris-HQ/1.0; +https://github.com/amineux/osiris-hq)',
+        'User-Agent': 'Mozilla/5.0 (compatible; Osiris-Command/1.0; +https://github.com/amineux/osiris-command)',
         Accept: 'text/html,application/xhtml+xml',
       },
     });

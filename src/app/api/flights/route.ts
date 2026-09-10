@@ -299,7 +299,7 @@ export async function GET() {
 
   if (cachedData && now - lastFetchTime < CACHE_TTL) {
     return NextResponse.json(cachedData, {
-      headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60' },
+      headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' },
     });
   }
 
@@ -307,7 +307,7 @@ export async function GET() {
     try {
       const data = await fetchPromise;
       return NextResponse.json(data, {
-        headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60' },
+        headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' },
       });
     } catch {
       return NextResponse.json({ error: 'Failed to fetch flight data' }, { status: 500 });
@@ -477,7 +477,7 @@ export async function GET() {
     fetchPromise = null;
     return NextResponse.json(data, {
       headers: {
-        'Cache-Control': data.total < 100 ? 'no-store, max-age=0' : 'public, s-maxage=30, stale-while-revalidate=60',
+        'Cache-Control': data.total < 100 ? 'no-store, max-age=0' : 'public, s-maxage=60, stale-while-revalidate=120',
       },
     });
   } catch (error) {

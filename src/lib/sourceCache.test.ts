@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { cachedSource, clearSourceCache } from './sourceCache';
+import { cachedSource, cachedJson, clearSourceCache } from './sourceCache';
 
 type Cam = { id: string };
 const cam = (id: string): Cam => ({ id });
@@ -75,5 +75,31 @@ describe('cachedSource', () => {
     const b = cachedSource<Cam>('t7b', async () => [cam('b')]);
     expect(await a()).toEqual([cam('a')]);
     expect(await b()).toEqual([cam('b')]);
+  });
+});
+
+describe('cachedJson', () => {
+  it('coalesces concurrent misses and serves the same object', async () => {
+    let calls = 0;
+    const load = cachedJson<{ n: number }>('j1', async () => {
+      calls++;
+      await new Promise(r => setTimeout(r, 20));
+      return { n: 7 };
+    });
+    const all = await Promise.all([load(), load(), load()]);
+    expect(calls).toBe(1);
+    for (const r of all) expect(r).toEqual({ n: 7 });
+  });
+
+  it('holds the last good payload when a refresh throws', async () => {
+    let mode: 'ok' | 'fail' = 'ok';
+    const load = cachedJson<{ n: number }>('j2', async () => {
+      if (mode === 'fail') throw new Error('down');
+      return { n: 1 };
+    }, 10);
+    expect(await load()).toEqual({ n: 1 });
+    mode = 'fail';
+    await new Promise(r => setTimeout(r, 25));
+    expect(await load()).toEqual({ n: 1 });
   });
 });

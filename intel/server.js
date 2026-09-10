@@ -25,7 +25,7 @@ const PORT = process.env.INTEL_PORT || 4000;
 
 const SDN_CSV_URL = 'https://data.opensanctions.org/datasets/latest/us_ofac_sdn/targets.simple.csv';
 const WIKIDATA_ENDPOINT = 'https://query.wikidata.org/sparql';
-const WIKIDATA_UA = 'Osiris-HQ-Intel/1.0 (https://github.com/amineux/osiris-hq; ontology engine)';
+const WIKIDATA_UA = 'Osiris-Command-Intel/1.0 (https://github.com/amineux/osiris-command; ontology engine)';
 const SDN_REFRESH_MS = 24 * 60 * 60 * 1000; // 24h
 const WIKIDATA_CACHE_TTL = 24 * 60 * 60 * 1000; // 24h
 const WIKIDATA_CACHE_MAX = 10_000;

@@ -6,6 +6,7 @@ import { API_GROUPS, ENDPOINT_COUNT, endpointId } from './apiCatalog';
 import { Callout, Code, CodeBlock, Pre, Section } from './docsPrimitives';
 import EndpointCard from './EndpointCard';
 import CommandPalette, { buildPaletteItems } from './CommandPalette';
+import { SHORTCUTS } from '@/lib/shortcuts';
 
 const GUIDE_SECTIONS = [
   { id: 'overview', title: 'Overview' },
@@ -152,7 +153,7 @@ export default function DocsClient() {
             </svg>
             <span className="flex flex-col leading-none">
               <span className="text-[12px] font-bold tracking-[0.3em] text-[var(--gold-primary)] font-mono">
-                OSIRIS HQ
+                OSIRIS COMMAND
               </span>
               <span className="text-[9px] font-mono tracking-[0.22em] text-[var(--text-muted)] uppercase mt-[3px]">
                 Docs
@@ -179,7 +180,7 @@ export default function DocsClient() {
           </button>
 
           <a
-            href="https://github.com/amineux/osiris-hq"
+            href="https://github.com/amineux/osiris-command"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="GitHub repository"
@@ -268,12 +269,12 @@ export default function DocsClient() {
               <span className="text-[var(--text-heading)]">Run your own</span>
               <br />
               <span className="bg-gradient-to-r from-[var(--gold-primary)] via-[#F0D060] to-[var(--cyan-primary)] bg-clip-text text-transparent">
-                Osiris HQ
+                Osiris Command
               </span>
             </h1>
 
             <p className="text-[15px] leading-[1.75] text-[var(--text-secondary)] max-w-[42rem]">
-              Osiris HQ is amineux’s personal command center. It aggregates aviation, maritime, seismic, conflict,
+              Osiris Command is amineux’s personal command center. It aggregates aviation, maritime, seismic, conflict,
               cyber, and OSINT feeds onto a single GPU-rendered map — and exposes every one of them as a plain HTTP
               endpoint. This is the same API the dashboard runs on. There is no separate, privileged internal tier.
             </p>
@@ -373,13 +374,13 @@ print(len(data["commercial_flights"]), "commercial")`,
           </Section>
 
           <Section id="self-hosting" eyebrow="Guide" title="Self-Hosting">
-            <p>Osiris HQ needs Node 20+ and no database. Docker Compose is the intended path; npm works too:</p>
-            <Pre label="Docker (recommended)" lang="bash">{`git clone https://github.com/amineux/osiris-hq.git
-cd osiris-hq
+            <p>Osiris Command needs Node 20+ and no database. Docker Compose is the intended path; npm works too:</p>
+            <Pre label="Docker (recommended)" lang="bash">{`git clone https://github.com/amineux/osiris-command.git
+cd osiris-command
 cp .env.example .env
 docker compose up -d --build   # http://localhost:3000`}</Pre>
-            <Pre label="Local development" lang="bash">{`git clone https://github.com/amineux/osiris-hq.git
-cd osiris-hq
+            <Pre label="Local development" lang="bash">{`git clone https://github.com/amineux/osiris-command.git
+cd osiris-command
 npm install                    # or: pnpm install
 npm run dev                    # http://localhost:3000`}</Pre>
             <p>For a production build, or to run the checks:</p>
@@ -454,6 +455,10 @@ docker compose up -d`}</Pre>
             <div className="grid sm:grid-cols-2 gap-2.5">
               {[
                 {
+                  k: 'Mission Profiles',
+                  v: 'One-click layer sets for Disaster, Aviation, Conflict, Maritime, Space, and Baseline.',
+                },
+                {
                   k: 'Layer Panel',
                   v: 'The left rail. Switches individual feeds on and off, and carries the theme selector.',
                 },
@@ -494,16 +499,7 @@ docker compose up -d`}</Pre>
               Press <Code>?</Code> at any time inside the application to bring up this list.
             </p>
             <div className="grid sm:grid-cols-2 gap-2">
-              {[
-                { key: 'F', desc: 'Toggle fullscreen' },
-                { key: 'S', desc: 'Share current view' },
-                { key: 'L', desc: 'Toggle layer panel' },
-                { key: 'M', desc: 'Toggle markets panel' },
-                { key: 'I', desc: 'Toggle intel feed' },
-                { key: 'R', desc: 'Reset to global view' },
-                { key: '?', desc: 'Show help' },
-                { key: 'ESC', desc: 'Close panels / popups' },
-              ].map(s => (
+              {SHORTCUTS.map(s => (
                 <div
                   key={s.key}
                   className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.015] px-3.5 py-2.5"
@@ -600,9 +596,9 @@ docker compose up -d`}</Pre>
           {/* Footer */}
           <footer className="border-t border-white/[0.06] pt-6 pb-16 flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] font-mono text-[var(--text-muted)]">
             {[
-              { href: 'https://github.com/amineux/osiris-hq', label: 'GitHub' },
-              { href: 'https://github.com/amineux/osiris-hq/issues', label: 'Report an issue' },
-              { href: 'https://github.com/simplifaisoul/osiris', label: 'Upstream OSIRIS' },
+              { href: 'https://github.com/amineux/osiris-command', label: 'GitHub' },
+              { href: 'https://github.com/amineux/osiris-command/issues', label: 'Report an issue' },
+              { href: 'https://github.com/simplifaisoul/osiris', label: 'OSIRIS (MIT attribution)' },
             ].map(l => (
               <a
                 key={l.label}

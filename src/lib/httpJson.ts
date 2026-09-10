@@ -2,6 +2,7 @@ import https from 'https';
 import zlib from 'zlib';
 import type { IncomingHttpHeaders } from 'http';
 import type { Readable } from 'stream';
+import { OSIRIS_UA as BRAND_UA } from './brand';
 
 /**
  * OSIRIS — JSON fetch over Node's https client.
@@ -16,7 +17,7 @@ import type { Readable } from 'stream';
  * with 406/429 and ask for contact details in their usage policies.
  */
 
-export const OSIRIS_UA = 'Osiris-HQ/1.0 (+https://github.com/amineux/osiris-hq)';
+export const OSIRIS_UA = BRAND_UA;
 
 export interface RequestOptions {
   timeoutMs?: number;
