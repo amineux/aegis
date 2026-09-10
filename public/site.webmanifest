@@ -1,6 +1,6 @@
 {
-  "name": "Osiris Command — Personal OSINT Command Center",
-  "short_name": "Osiris Command",
+  "name": "Aegis — Personal OSINT Command Center",
+  "short_name": "Aegis",
   "description": "amineux’s personal OSINT dashboard. Live flights, CCTV, earthquakes, wildfires, news, and recon tools on a 3D globe.",
   "start_url": "/",
   "display": "standalone",

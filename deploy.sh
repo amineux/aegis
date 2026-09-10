@@ -1,10 +1,10 @@
 #!/bin/bash
 # =========================================================
-#  Osiris Command — Deploy Cycle Script
+#  Aegis — Deploy Cycle Script
 #  Git → SSH → Docker Rebuild → Live
 # =========================================================
 #
-#  Usage (from your local osiris-command project directory):
+#  Usage (from your local aegis project directory):
 #    bash deploy.sh                  # deploys current staged changes
 #    bash deploy.sh "commit message" # deploys with custom commit message
 #
@@ -14,7 +14,7 @@ set -e
 
 # --- Configuration ---
 SERVER="root@100.89.48.10"
-REMOTE_DIR="/root/osiris"
+REMOTE_DIR="/root/aegis"
 BRANCH="master"
 
 # Colors
@@ -25,7 +25,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo -e "${CYAN}╔══════════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║     OSIRIS COMMAND DEPLOYMENT CYCLE      ║${NC}"
+echo -e "${CYAN}║     AEGIS DEPLOYMENT CYCLE               ║${NC}"
 echo -e "${CYAN}║     Git → SSH → Docker → Live            ║${NC}"
 echo -e "${CYAN}╚══════════════════════════════════════════╝${NC}"
 echo ""
@@ -34,7 +34,7 @@ echo ""
 echo -e "${YELLOW}[1/2] GIT — Staging & Pushing...${NC}"
 git add -A
 
-COMMIT_MSG="${1:-deploy: update osiris-command $(date '+%Y-%m-%d %H:%M')}"
+COMMIT_MSG="${1:-deploy: update aegis $(date '+%Y-%m-%d %H:%M')}"
 git commit -m "$COMMIT_MSG" || echo -e "${YELLOW}  (nothing new to commit)${NC}"
 
 git push origin "$BRANCH"
@@ -43,11 +43,11 @@ echo ""
 
 # --- STEP 2: SSH — Pull & Docker Rebuild ---
 echo -e "${YELLOW}[2/2] SERVER — Pulling & Rebuilding Docker...${NC}"
-ssh "$SERVER" "cd $REMOTE_DIR && git pull && docker-compose down && docker-compose up -d --build"
+ssh "$SERVER" "cd $REMOTE_DIR && git pull && docker compose down && docker compose up -d --build"
 echo -e "${GREEN}  ✓ Docker rebuilt and running${NC}"
 echo ""
 
 echo -e "${CYAN}╔══════════════════════════════════════════╗${NC}"
 echo -e "${CYAN}║     DEPLOYMENT COMPLETE                  ║${NC}"
-echo -e "${CYAN}║     Osiris Command is live on the host   ║${NC}"
+echo -e "${CYAN}║     Aegis is live on the host            ║${NC}"
 echo -e "${CYAN}╚══════════════════════════════════════════╝${NC}"

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { REPO_SLUG, REPO_URL } from '@/lib/brand';
 
 interface CryptoPrice { symbol: string; price: number; change24h?: number; }
 interface Earthquake { id: string; magnitude: number; place: string; time: number; depth: number; }
@@ -102,7 +103,7 @@ export default function GlobalStatusBar() {
             .slice(0, 5);
           setQuakes(majorQuakes);
         }
-      } catch (e) { console.warn('[OSIRIS] Suppressed error:', e instanceof Error ? e.message : e); }
+      } catch (e) { console.warn('[AEGIS] Suppressed error:', e instanceof Error ? e.message : e); }
     };
     fetchData();
     const iv = setInterval(fetchData, 60000);
@@ -126,8 +127,8 @@ export default function GlobalStatusBar() {
         
         {/* ── LEFT: Repo & docs ── */}
         <div className="flex-shrink-0 h-full flex items-center pointer-events-auto">
-          <a href="https://github.com/amineux/osiris-command" target="_blank" rel="noopener noreferrer"
-            title="amineux / osiris-command"
+          <a href={REPO_URL} target="_blank" rel="noopener noreferrer"
+            title={REPO_SLUG}
             aria-label="GitHub repository"
             className="h-full px-3 flex items-center gap-1.5 bg-[var(--gold-primary)]/10 text-[var(--gold-primary)]/80 hover:text-[var(--gold-primary)] hover:bg-[var(--gold-primary)]/20 border-r border-white/[0.04] transition-all duration-200"
           >

@@ -2,7 +2,7 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════
-   OSIRIS — Global Intelligence Platform Design System
+   Aegis — Global Intelligence Platform Design System
    Egyptian Mythology × Dark Ops × Glassmorphism
    ═══════════════════════════════════════════════════════════════ */
 
@@ -226,7 +226,7 @@ html:has(.docs-root) body {
   border-radius: 10px;
 }
 
-/* ── Osiris Gold Glow ── */
+/* ── Aegis Gold Glow ── */
 .osiris-glow {
   box-shadow:
     0 0 20px rgba(var(--gold-rgb), 0.12),

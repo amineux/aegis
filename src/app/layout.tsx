@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     "CCTV cameras live",
     "earthquake monitor", "USGS earthquake",
     "wildfire tracker", "NASA FIRMS",
-    PRODUCT_NAME, AUTHOR, "osiris-command",
+    PRODUCT_NAME, AUTHOR, "aegis",
   ],
   authors: [{ name: AUTHOR, url: REPO_URL }],
   creator: AUTHOR,

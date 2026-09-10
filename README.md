@@ -1,10 +1,10 @@
 <div align="center">
 
-# Osiris Command
+# Aegis
 
 ### Personal OSINT command center — by [amineux](https://github.com/amineux)
 
-[![GitHub](https://img.shields.io/badge/amineux%2Fosiris--command-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/amineux/osiris-command)
+[![GitHub](https://img.shields.io/badge/amineux%2Faegis-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/amineux/aegis)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
 [![MapLibre](https://img.shields.io/badge/MapLibre_GL-GPU_Rendered-396CB2?style=for-the-badge)](https://maplibre.org)
@@ -16,13 +16,13 @@
 
 ---
 
-Osiris Command is **amineux**’s personal standalone command center. Core map feeds run with **no API keys**. The codebase includes MIT-licensed work originally published as [OSIRIS](https://github.com/simplifaisoul/osiris) by [simplifaisoul](https://github.com/simplifaisoul).
+Aegis is **amineux**’s personal standalone command center. Core map feeds run with **no API keys**. The codebase includes MIT-licensed work originally published as [OSIRIS](https://github.com/simplifaisoul/osiris) by [simplifaisoul](https://github.com/simplifaisoul).
 
 ## Quick start (Docker)
 
 ```bash
-git clone https://github.com/amineux/osiris-command.git
-cd osiris-command
+git clone https://github.com/amineux/aegis.git
+cd aegis
 cp .env.example .env          # optional — keys, scanner, host port
 docker compose up -d --build
 ```
@@ -37,15 +37,15 @@ docker compose up -d --build  # rebuild after pulling
 docker compose down           # stop
 ```
 
-**Custom host port** — the container always listens on `3000`. Set `OSIRIS_PORT` in `.env` (for example `OSIRIS_PORT=3005`) without editing the compose file.
+**Custom host port** — the container always listens on `3000`. Set `AEGIS_PORT` in `.env` (for example `AEGIS_PORT=3005`) without editing the compose file.
 
 ## Local development (optional)
 
 Needs Node 20+ (npm or pnpm). No database.
 
 ```bash
-git clone https://github.com/amineux/osiris-command.git
-cd osiris-command
+git clone https://github.com/amineux/aegis.git
+cd aegis
 npm install                   # or: pnpm install
 npm run dev                   # http://localhost:3000
 ```
@@ -66,8 +66,8 @@ Aviation, satellites, fires, earthquakes, weather, news, CCTV, CVEs, crypto-wall
 | `CLOUDFLARE_API_TOKEN` | Internet-outage / attack-origin map layers |
 | `ETHERSCAN_API_KEY` / `HELIUS_API_KEY` | Deeper ETH / SOL wallet forensics |
 | `FIRMS_API_KEY`, `OPENSKY_CLIENT_ID` / `SECRET`, `N2YO_API_KEY`, `AIS_API_KEY` | Higher rate limits / future sources — not required for the default feeds |
-| `OSIRIS_PORT` | Host port published by Compose (default `3000`) |
-| `OSIRIS_TELEGRAM_CHANNELS` | Override the default public Telegram channels |
+| `AEGIS_PORT` | Host port published by Compose (default `3000`) |
+| `AEGIS_TELEGRAM_CHANNELS` | Override the default public Telegram channels |
 
 Generate a scanner secret with `openssl rand -hex 32`. `.env` is gitignored.
 
@@ -115,6 +115,6 @@ Next.js 16 (App Router) · TypeScript 5 · MapLibre GL · Framer Motion · Docke
 
 MIT — see [LICENSE](LICENSE).
 
-Copyright (c) 2026 amineux and simplifaisoul. Osiris Command includes MIT-licensed work from [OSIRIS](https://github.com/simplifaisoul/osiris).
+Copyright (c) 2026 amineux and simplifaisoul. Aegis includes MIT-licensed work originally published as [OSIRIS](https://github.com/simplifaisoul/osiris).
 
 Use the tools only on systems you own or are authorized to monitor. See [SECURITY.md](SECURITY.md).

@@ -2,12 +2,12 @@ import https from 'https';
 import zlib from 'zlib';
 import type { IncomingHttpHeaders } from 'http';
 import type { Readable } from 'stream';
-import { OSIRIS_UA as BRAND_UA } from './brand';
+import { AEGIS_UA as BRAND_UA } from './brand';
 
 /**
- * OSIRIS — JSON fetch over Node's https client.
+ * Aegis — JSON fetch over Node's https client.
  *
- * Some upstreams OSIRIS depends on cannot be reached with the bundled undici
+ * Some upstreams Aegis depends on cannot be reached with the bundled undici
  * `fetch` from the Next server runtime — it stalls and throws
  * UND_ERR_CONNECT_TIMEOUT after 10s, while `https.get` to the same URL returns
  * in a few hundred ms. This helper is the shared escape hatch.
@@ -17,7 +17,7 @@ import { OSIRIS_UA as BRAND_UA } from './brand';
  * with 406/429 and ask for contact details in their usage policies.
  */
 
-export const OSIRIS_UA = BRAND_UA;
+export const AEGIS_UA = BRAND_UA;
 
 export interface RequestOptions {
   timeoutMs?: number;
@@ -43,7 +43,7 @@ function request(url: string, { timeoutMs = 20000, headers = {} }: RequestOption
     const req = https.get(
       url,
       {
-        headers: { 'User-Agent': OSIRIS_UA, Accept: 'application/json', 'Accept-Language': 'en', ...headers },
+        headers: { 'User-Agent': AEGIS_UA, Accept: 'application/json', 'Accept-Language': 'en', ...headers },
         timeout: timeoutMs,
       },
       (res) => {

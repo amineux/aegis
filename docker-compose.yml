@@ -1,14 +1,14 @@
-name: osiris-command
+name: aegis
 services:
-  osiris:
+  aegis:
     # Builds locally from the Dockerfile so you always run this clone.
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: osiris-command
-    # Host port is configurable via OSIRIS_PORT in .env (defaults to 3000).
+    container_name: aegis
+    # Host port is configurable via AEGIS_PORT in .env (defaults to 3000).
     ports:
-      - "${OSIRIS_PORT:-3000}:3000"
+      - "${AEGIS_PORT:-3000}:3000"
     # Optional API keys / scanner backend — copy .env.example to .env and
     # fill in what you need. Missing file is ignored (keyless feeds still work).
     env_file:
@@ -25,25 +25,25 @@ services:
     networks:
       - default
 
-  osiris-cache:
+  aegis-cache:
     image: nginx:alpine
-    container_name: osiris-command-cache
+    container_name: aegis-cache
     ports:
       - "8080:8080"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - nginx-cache:/var/cache/nginx
     depends_on:
-      - osiris
+      - aegis
     restart: unless-stopped
     networks:
       - default
 
-  osiris-intel:
+  aegis-intel:
     build:
       context: ./intel
       dockerfile: Dockerfile
-    container_name: osiris-command-intel
+    container_name: aegis-intel
     ports:
       - "4000:4000"
     restart: unless-stopped
@@ -58,13 +58,13 @@ x-casaos:
   architectures:
     - amd64
     - arm64
-  main: osiris
+  main: aegis
   author: amineux
   developer: amineux
   category: Network
   description:
     en_us: >-
-      Osiris Command is amineux’s personal OSINT command center. It aggregates
+      Aegis is amineux’s personal OSINT command center. It aggregates
       real-time global intelligence across aviation, maritime, CCTV, seismic
       activity, wildfires, news, weather, space weather, cyber threats and
       conflict zones on a GPU-accelerated MapLibre map. Core feeds work with
@@ -72,11 +72,11 @@ x-casaos:
   tagline:
     en_us: Personal OSINT command center
   title:
-    en_us: Osiris Command
-  icon: https://raw.githubusercontent.com/amineux/osiris-command/master/public/casaos-icon.png
-  thumbnail: https://raw.githubusercontent.com/amineux/osiris-command/master/public/og-image.png
+    en_us: Aegis
+  icon: https://raw.githubusercontent.com/amineux/aegis/master/public/casaos-icon.png
+  thumbnail: https://raw.githubusercontent.com/amineux/aegis/master/public/og-image.png
   screenshot_link:
-    - https://raw.githubusercontent.com/amineux/osiris-command/master/public/og-image.png
+    - https://raw.githubusercontent.com/amineux/aegis/master/public/og-image.png
   scheme: http
   hostname: ""
   port_map: "3000"
@@ -88,7 +88,7 @@ x-casaos:
         en_us: "(Optional) RECON scanner backend URL, e.g. http://scanner:7700"
     - container: SCANNER_KEY
       description:
-        en_us: "(Optional) RECON scanner shared secret (must match backend OSIRIS_KEY)."
+        en_us: "(Optional) RECON scanner shared secret (must match the backend scanner key)."
     - container: FIRMS_API_KEY
       description:
         en_us: "(Optional) NASA FIRMS API key for active-fire data."

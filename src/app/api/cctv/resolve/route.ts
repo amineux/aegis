@@ -97,7 +97,7 @@ export async function GET(req: Request) {
     const res = await safeFetch(url, {
       signal: AbortSignal.timeout(10_000),
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; Osiris-Command/1.0; +https://github.com/amineux/osiris-command)',
+        'User-Agent': 'Mozilla/5.0 (compatible; Aegis/1.0; +https://github.com/amineux/aegis)',
         Accept: 'text/html,application/xhtml+xml',
       },
     });

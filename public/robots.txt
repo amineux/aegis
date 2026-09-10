@@ -1,5 +1,5 @@
-# Osiris Command — amineux personal OSINT command center
-# https://github.com/amineux/osiris-command
+# Aegis — amineux personal OSINT command center
+# https://github.com/amineux/aegis
 
 User-agent: *
 Allow: /

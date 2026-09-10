@@ -81,7 +81,7 @@ export function watchMapStartup(map: Map, onStatus: (status: MapStartupStatus) =
   const onError = (event: ErrorEvent & { sourceId?: string }) => {
     // Isolated entity/terrain failures must not replace a working map.
     if (status !== 'ready' && (!event.sourceId || event.sourceId === 'carto')) report('error');
-    console.warn('[OSIRIS] Map resource unavailable:', event.error);
+    console.warn('[AEGIS] Map resource unavailable:', event.error);
   };
   const onContextLost = () => { contextLost = true; report('error'); };
   const onContextRestored = () => { contextLost = false; checkReady(); };

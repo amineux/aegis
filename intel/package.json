@@ -1,8 +1,8 @@
 {
-  "name": "osiris-command-intel",
+  "name": "aegis-intel",
   "version": "1.0.0",
   "private": true,
-  "description": "Osiris Command intelligence sidecar — sanctions / Wikidata resolver for amineux/osiris-command.",
+  "description": "Aegis intelligence sidecar — sanctions / Wikidata resolver for amineux/aegis.",
   "scripts": {
     "start": "node server.js"
   },

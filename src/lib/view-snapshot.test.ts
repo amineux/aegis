@@ -44,13 +44,13 @@ describe('share search params', () => {
 describe('buildViewSnapshot', () => {
   it('records the camera, sorted layers, and non-empty counts', () => {
     const snap = buildViewSnapshot(
-      'Osiris Command',
+      'Aegis',
       { lat: 1.234567, lng: 2.345678, zoom: 8.125 },
       { flights: true, cctv: true, fires: false },
       { commercial_flights: [{}, {}], cameras: [], earthquakes: [1] },
       new Date('2026-09-10T12:00:00Z'),
     );
-    expect(snap.product).toBe('Osiris Command');
+    expect(snap.product).toBe('Aegis');
     expect(snap.generated_at).toBe('2026-09-10T12:00:00.000Z');
     expect(snap.view).toEqual({ lat: 1.23457, lng: 2.34568, zoom: 8.13 });
     expect(snap.layers).toEqual(['cctv', 'flights']);
