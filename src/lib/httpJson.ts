@@ -16,7 +16,7 @@ import type { Readable } from 'stream';
  * with 406/429 and ask for contact details in their usage policies.
  */
 
-export const OSIRIS_UA = 'OSIRIS-OSINT/1.0 (+https://github.com/simplifaisoul/osiris)';
+export const OSIRIS_UA = 'Osiris-HQ/1.0 (+https://github.com/amineux/osiris-hq)';
 
 export interface RequestOptions {
   timeoutMs?: number;
