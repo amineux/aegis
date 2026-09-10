@@ -8,7 +8,7 @@ const url = process.env.PREVIEW_URL || 'http://127.0.0.1:3001';
 if (!['127.0.0.1', 'localhost'].includes(new URL(url).hostname)) {
   throw new Error('This smoke test only accepts localhost previews.');
 }
-const profile = await mkdtemp(join(tmpdir(), 'osiris-smoke-'));
+const profile = await mkdtemp(join(tmpdir(), 'aegis-smoke-'));
 const chrome = spawn(process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe', [
   '--headless=new', '--no-first-run', '--no-default-browser-check',
   '--remote-debugging-pipe', `--user-data-dir=${profile}`, '--window-size=1440,1000', 'about:blank',

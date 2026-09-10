@@ -63,7 +63,7 @@ export function attachTerrain(map: Map, onStatus: (status: TerrainStatus) => voi
       failed = true;
       release();
       report('error');
-      console.warn('[OSIRIS] Terrain unavailable:', error);
+      console.warn('[AEGIS] Terrain unavailable:', error);
     }
   };
   const update = () => {

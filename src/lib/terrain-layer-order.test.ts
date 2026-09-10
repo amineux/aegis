@@ -4,7 +4,7 @@ import { batchTerrainLayers } from './terrain-layer-order';
 
 type Layer = { id: string; type: string };
 
-// Representative ordering from OsirisMap: live circles and symbols separate
+// Representative ordering from AegisMap: live circles and symbols separate
 // day/night, network lines, scan connections, SDK paths and drawn regions.
 const layers: Layer[] = [
   { id: 'background', type: 'background' },

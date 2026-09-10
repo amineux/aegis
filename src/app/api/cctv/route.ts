@@ -46,7 +46,7 @@ import {
 } from './world-live';
 
 /**
- * OSIRIS — Worldwide CCTV Camera API v2
+ * Aegis — Worldwide CCTV Camera API v2
  * Viewport-aware: pass ?region=xx to load cameras for specific regions
  * Supports: uk, us-east, us-west, us-central, canada, europe, asia
  * Or pass ?lat=x&lng=y&radius=5 for proximity-based loading
@@ -138,12 +138,12 @@ async function subSource(label: string, url: string, timeoutMs: number) {
          — Montreal (403) and Alberta (400) between them pushed Canada past
          12s, so the whole country came back empty on a cold cache. */
       if (res.status >= 400 && res.status < 500) {
-        console.warn(`[OSIRIS] ${label} returned ${res.status} — absent from this refresh, not retried`);
+        console.warn(`[AEGIS] ${label} returned ${res.status} — absent from this refresh, not retried`);
         return null;
       }
-      if (attempt === 2) console.warn(`[OSIRIS] ${label} returned ${res.status} — absent from this refresh`);
+      if (attempt === 2) console.warn(`[AEGIS] ${label} returned ${res.status} — absent from this refresh`);
     } catch (e) {
-      if (attempt === 2) console.warn(`[OSIRIS] ${label} failed — absent from this refresh:`, e instanceof Error ? e.message : e);
+      if (attempt === 2) console.warn(`[AEGIS] ${label} failed — absent from this refresh:`, e instanceof Error ? e.message : e);
     }
   }
   return null;
@@ -382,7 +382,7 @@ async function fetchEuropeCameras(): Promise<any[]> {
   try {
     cams.push(...await fetchNetherlandsCameras());
   } catch (e) {
-    console.warn('[OSIRIS] Netherlands cameras failed — absent from this refresh:', e instanceof Error ? e.message : e);
+    console.warn('[AEGIS] Netherlands cameras failed — absent from this refresh:', e instanceof Error ? e.message : e);
   }
 
   cams.push(...await fetchAsfinagCameras());
@@ -548,7 +548,7 @@ function withBudget(region: string, fetcher: RegionFetcher): Promise<{ cameras: 
     fetcher().then(cameras => ({ cameras, pending: cameras.length === 0 })).finally(() => clearTimeout(timer)),
     new Promise<{ cameras: Awaited<ReturnType<RegionFetcher>>; pending: boolean }>(resolve => {
       timer = setTimeout(() => {
-        console.warn(`[OSIRIS] cctv:${region} over ${REGION_BUDGET_MS}ms — returning without it`);
+        console.warn(`[AEGIS] cctv:${region} over ${REGION_BUDGET_MS}ms — returning without it`);
         resolve({ cameras: [], pending: true });
       }, REGION_BUDGET_MS);
     }),

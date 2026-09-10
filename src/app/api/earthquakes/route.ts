@@ -3,7 +3,7 @@ import { httpJson } from '@/lib/httpJson';
 import { cachedJson } from '@/lib/sourceCache';
 
 /**
- * Osiris Command — Earthquake Data API
+ * Aegis — Earthquake Data API
  * Real-time seismic events from USGS (last 24h, M2.5+). No API key required.
  *
  * The HUD used to hit USGS twice from the browser (map + ticker). This route
@@ -92,7 +92,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('[OSIRIS] Earthquake fetch error:', error);
+    console.error('[AEGIS] Earthquake fetch error:', error);
     return NextResponse.json({ earthquakes: [], error: 'Failed to fetch earthquake data' }, { status: 500 });
   }
 }

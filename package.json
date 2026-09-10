@@ -1,15 +1,15 @@
 {
-  "name": "osiris-command",
+  "name": "aegis",
   "version": "0.1.0",
   "private": true,
-  "description": "Osiris Command — amineux’s personal OSINT command center. MIT; based on the open-source OSIRIS dashboard by simplifaisoul.",
+  "description": "Aegis — amineux’s personal OSINT command center. MIT; includes work originally published as OSIRIS by simplifaisoul.",
   "author": "amineux",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/amineux/osiris-command.git"
+    "url": "https://github.com/amineux/aegis.git"
   },
-  "homepage": "https://github.com/amineux/osiris-command",
+  "homepage": "https://github.com/amineux/aegis",
   "scripts": {
     "predev": "node tools/prepare-map-worker.mjs",
     "dev": "next dev",

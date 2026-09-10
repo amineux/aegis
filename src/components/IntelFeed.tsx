@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Newspaper, ChevronDown, ChevronUp, ExternalLink, MapPin, Zap } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════
-   OSIRIS — Intelligence Feed
+   Aegis — Intelligence Feed
    SIGINT-style news aggregation with risk scoring
    ═══════════════════════════════════════════════════════════════ */
 

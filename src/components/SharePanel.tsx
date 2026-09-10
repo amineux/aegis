@@ -51,7 +51,7 @@ export default function SharePanel({ mapView, activeLayers, mapCenter, data, com
   const exportSnapshot = useCallback(() => {
     const snap = buildViewSnapshot(PRODUCT_NAME, center, activeLayers, data);
     downloadFile(
-      `osiris-command-view-${new Date().toISOString().slice(0, 10)}.json`,
+      `aegis-view-${new Date().toISOString().slice(0, 10)}.json`,
       JSON.stringify(snap, null, 2),
       'application/json',
     );

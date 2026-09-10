@@ -2,17 +2,23 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 
 /**
- * OSIRIS — Military-Grade Intelligence API
+ * Aegis — Intelligence API
  * Fetches Telegram OSINT feeds directly, with a failsafe fallback 
  * to traditional intelligence sources if Telegram blocks the IP.
  */
 
-const TELEGRAM_CHANNELS = [
+const DEFAULT_TELEGRAM_CHANNELS = [
   'OSINTtechnical',
   'Faytuks',
   'Liveuamap',
   'CyberKnow'
 ];
+
+function telegramChannels(): string[] {
+  const raw = process.env.AEGIS_TELEGRAM_CHANNELS || '';
+  const parsed = raw.split(',').map(s => s.trim()).filter(Boolean);
+  return parsed.length ? parsed : DEFAULT_TELEGRAM_CHANNELS;
+}
 
 const FALLBACK_FEEDS = {
   BBC: 'https://feeds.bbci.co.uk/news/world/rss.xml',
@@ -101,7 +107,7 @@ function parseRSSItems(xml: string, sourceName: string): any[] {
 
 export async function GET() {
   try {
-    const feedPromises = TELEGRAM_CHANNELS.map(async (channel) => {
+    const feedPromises = telegramChannels().map(async (channel) => {
       try {
         const res = await fetch(`https://t.me/s/${channel}`, { 
           signal: AbortSignal.timeout(8000), 

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export const maxDuration = 60;
 
 /**
- * OSIRIS — Global Stats API
+ * Aegis — Global Stats API
  * Lightweight aggregation endpoint.
  * Fetches metrics from all local APIs and returns ONLY the counts.
  * 

@@ -2,7 +2,7 @@ import type { CctvCamera } from './types';
 import { stealthFetch } from '@/lib/stealthFetch';
 
 /**
- * OSIRIS — Netherlands CCTV Cameras (Rijkswaterstaat)
+ * Aegis — Netherlands CCTV Cameras (Rijkswaterstaat)
  * Source: https://api.rwsverkeersinfo.nl/api/cameras
  * 26 operator-controlled HD motorway cameras — NO API KEY NEEDED.
  *
@@ -87,6 +87,6 @@ export async function fetchNetherlandsCameras(): Promise<CctvCamera[]> {
   if (!res.ok) throw new Error(`RWS HTTP ${res.status}`);
 
   const cams = parseRwsCameras(await res.json());
-  console.log(`[OSIRIS] Netherlands cameras — Rijkswaterstaat: ${cams.length}`);
+  console.log(`[AEGIS] Netherlands cameras — Rijkswaterstaat: ${cams.length}`);
   return cams;
 }

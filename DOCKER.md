@@ -1,8 +1,8 @@
-# Self-hosting Osiris Command with Docker
+# Self-hosting Aegis with Docker
 
-Osiris Command ships as a self-contained Next.js standalone build — amineux’s
+Aegis ships as a self-contained Next.js standalone build — amineux’s
 personal command center. Core feeds run without API keys. The repository
-includes MIT-licensed work from [OSIRIS](https://github.com/simplifaisoul/osiris).
+includes MIT-licensed work originally published as [OSIRIS](https://github.com/simplifaisoul/osiris).
 
 > **TL;DR:** Core feeds run **without any API keys**. Aviation, satellites,
 > fires, earthquakes, weather, news, CCTV, and CVEs use public sources. Keys
@@ -12,8 +12,8 @@ includes MIT-licensed work from [OSIRIS](https://github.com/simplifaisoul/osiris
 ## 1. Docker Compose (recommended)
 
 ```bash
-git clone https://github.com/amineux/osiris-command.git
-cd osiris-command
+git clone https://github.com/amineux/aegis.git
+cd aegis
 
 # optional: keys / scanner / host port
 cp .env.example .env
@@ -25,17 +25,17 @@ Open <http://localhost:3000>.
 
 What the compose file does:
 
-- **`osiris`** — builds locally from the `Dockerfile` so you run this clone.
-- **`osiris-cache`** — nginx on host port `8080` for compressed API / tile
+- **`aegis`** — builds locally from the `Dockerfile` so you run this clone.
+- **`aegis-cache`** — nginx on host port `8080` for compressed API / tile
   caching. Optional for a first look; the UI on `3000` works without it.
-- **`osiris-intel`** — ontology sidecar on host port `4000`.
+- **`aegis-intel`** — ontology sidecar on host port `4000`.
 - **`env_file: .env` (`required: false`)** — missing `.env` is fine; keyless
   feeds still start.
-- **`ports: ${OSIRIS_PORT:-3000}:3000`** — container listens on 3000; set
-  `OSIRIS_PORT` in `.env` to remap the host port.
+- **`ports: ${AEGIS_PORT:-3000}:3000`** — container listens on 3000; set
+  `AEGIS_PORT` in `.env` to remap the host port.
 - **`restart: unless-stopped`** — survives reboots.
 
-There is no required external Docker network. A stock `docker compose up -d`
+There is no required external Docker network. A stock `docker compose up -d --build`
 on a clean host is enough.
 
 ```bash
@@ -47,8 +47,8 @@ docker compose down
 ### Plain `docker run` (UI only)
 
 ```bash
-docker build -t osiris-command:latest .
-docker run -d --name osiris-command -p 3000:3000 --env-file .env --restart unless-stopped osiris-command:latest
+docker build -t aegis:latest .
+docker run -d --name aegis -p 3000:3000 --env-file .env --restart unless-stopped aegis:latest
 ```
 
 If `.env` does not exist yet, drop `--env-file .env`.
@@ -64,24 +64,24 @@ Multi-stage build on `node:22-alpine`, runs as `nextjs` (uid 1001), serves
 The compose file includes an `x-casaos:` block (title, description, icon, port
 map, env descriptions) that plain Compose ignores.
 
-1. Clone this repo somewhere persistent (for example `/DATA/AppData/osiris-command`).
+1. Clone this repo somewhere persistent (for example `/DATA/AppData/aegis`).
 2. CasaOS → **Install a customized app** → paste `docker-compose.yml`, or run
    `docker compose up -d --build` from the clone.
-3. The UI is on host port `3000` (or `OSIRIS_PORT`).
+3. The UI is on host port `3000` (or `AEGIS_PORT`).
 
 Icon and screenshots are served from this repo:
 
-`https://raw.githubusercontent.com/amineux/osiris-command/master/public/casaos-icon.png`
+`https://raw.githubusercontent.com/amineux/aegis/master/public/casaos-icon.png`
 
 CasaOS stores imported compose files under `/var/lib/casaos/apps/`, so a
 relative `build:` context may not resolve there. If importing the YAML
 directly, build first:
 
 ```bash
-docker build -t osiris-command:latest /path/to/osiris-command
+docker build -t aegis:latest /path/to/aegis
 ```
 
-then point the service at `image: osiris-command:latest` instead of `build:`.
+then point the service at `image: aegis:latest` instead of `build:`.
 
 ## 3. API keys and data sources
 
@@ -93,7 +93,7 @@ explains which variables the code actually reads.
 | Variable | Purpose |
 |----------|---------|
 | `SCANNER_URL` | RECON scanner backend (e.g. `http://scanner:7700`) |
-| `SCANNER_KEY` | Shared secret; must equal the backend’s `OSIRIS_KEY` |
+| `SCANNER_KEY` | Shared secret; must equal the backend’s scanner key |
 | `CLOUDFLARE_API_TOKEN` | Cloudflare Radar “Internet Outages” / “Attack Origins” layers |
 | `ETHERSCAN_API_KEY` | Richer ETH internals (RECON chain tab still works without it) |
 | `HELIUS_API_KEY` | Parsed Solana transfers |
@@ -114,8 +114,8 @@ rest of the dashboard works. Generate a key with `openssl rand -hex 32`.
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
-| `OSIRIS_TELEGRAM_CHANNELS` | Public Telegram usernames (no `@`) for the Telegram layer | curated set in `.env.example` |
-| `OSIRIS_PORT` | Host port Compose publishes | `3000` |
+| `AEGIS_TELEGRAM_CHANNELS` | Public Telegram usernames (no `@`) for the Telegram layer | curated set in `.env.example` |
+| `AEGIS_PORT` | Host port Compose publishes | `3000` |
 
 `.env` is gitignored. Only `.env.example` is committed.
 
