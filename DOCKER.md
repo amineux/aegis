@@ -1,155 +1,130 @@
-# Self-Hosting OSIRIS with Docker
+# Self-hosting Osiris HQ with Docker
 
-OSIRIS ships as a self-contained Next.js standalone build. This guide covers
-running it with Docker / Docker Compose, deploying it as a [CasaOS](https://casaos.io)
-app, and configuring the optional API keys.
+Osiris HQ ships as a self-contained Next.js standalone build. This is
+[amineux](https://github.com/amineux)’s personal command center — a standalone
+derivative of [OSIRIS](https://github.com/simplifaisoul/osiris) (MIT).
 
-> **TL;DR:** OSIRIS runs fully **without any API keys**. All core feeds
-> (aviation, satellites, fires, earthquakes, weather, news, CVEs) use public
-> keyless sources. Keys only matter for the optional RECON scanner backend and
-> for raising rate limits on a few feeds.
-
----
+> **TL;DR:** Core feeds run **without any API keys**. Aviation, satellites,
+> fires, earthquakes, weather, news, CCTV, and CVEs use public sources. Keys
+> only matter for the optional RECON scanner, Cloudflare Radar layers, deeper
+> chain intel, or higher rate limits.
 
 ## 1. Docker Compose (recommended)
 
 ```bash
-git clone https://github.com/simplifaisoul/osiris.git
-cd osiris
+git clone https://github.com/amineux/osiris-hq.git
+cd osiris-hq
 
-# optional: configure keys / scanner backend
-cp .env.template .env        # then edit .env
+# optional: keys / scanner / host port
+cp .env.example .env
 
-docker compose up -d
+docker compose up -d --build
 ```
 
 Open <http://localhost:3000>.
 
 What the compose file does:
 
-- **`build:`** — compose builds the image locally from the `Dockerfile`, so
-  you always run the code you just cloned. To run the prebuilt registry image
-  instead, add `image: ghcr.io/simplifaisoul/osiris:latest` to the `osiris`
-  service and drop the `build:` block.
-- **`env_file: .env` (`required: false`)** — if a `.env` file exists its
-  values are injected into the container; if it's missing, OSIRIS still starts
-  with the keyless feeds.
-- **`ports: ${OSIRIS_PORT:-3000}:3000`** — the web UI. The container always
-  listens on 3000; the published **host** port is `OSIRIS_PORT` (default
-  `3000`). Set `OSIRIS_PORT` in `.env` to remap it, e.g. `OSIRIS_PORT=3005`
-  when 3000 is already in use — no need to edit the compose file.
+- **`osiris`** — builds locally from the `Dockerfile` so you run this clone,
+  not an upstream registry image.
+- **`osiris-cache`** — nginx on host port `8080` for compressed API / tile
+  caching. Optional for a first look; the UI on `3000` works without it.
+- **`osiris-intel`** — ontology sidecar on host port `4000`.
+- **`env_file: .env` (`required: false`)** — missing `.env` is fine; keyless
+  feeds still start.
+- **`ports: ${OSIRIS_PORT:-3000}:3000`** — container listens on 3000; set
+  `OSIRIS_PORT` in `.env` to remap the host port.
 - **`restart: unless-stopped`** — survives reboots.
 
-Common commands:
+There is no required external Docker network. A stock `docker compose up -d`
+on a clean host is enough.
 
 ```bash
-docker compose logs -f          # follow logs
-docker compose up -d --build    # rebuild locally after pulling new code
-docker compose down             # stop & remove
+docker compose logs -f
+docker compose up -d --build
+docker compose down
 ```
 
-### Pull the prebuilt image from GHCR
-
-A prebuilt image for `linux/amd64` and `linux/arm64` is published to the GitHub
-Container Registry on every push to `master` and every `v*.*.*` tag, so you can
-run OSIRIS without building anything:
+### Plain `docker run` (UI only)
 
 ```bash
-docker pull ghcr.io/simplifaisoul/osiris:latest   # or a pinned tag, e.g. :0.1.0
-docker run -d --name osiris \
-  -p 3005:3000 --env-file .env --restart unless-stopped \
-  ghcr.io/simplifaisoul/osiris:latest
+docker build -t osiris-hq:latest .
+docker run -d --name osiris-hq -p 3000:3000 --env-file .env --restart unless-stopped osiris-hq:latest
 ```
 
-The package is public — no `docker login` is required to pull it.
-
-### Plain `docker run`
-
-```bash
-docker build -t osiris:latest .
-docker run -d --name osiris -p 3000:3000 --env-file .env --restart unless-stopped osiris:latest
-```
+If `.env` does not exist yet, drop `--env-file .env`.
 
 ### Image details
 
-Multi-stage build on `node:22-alpine`, runs as a non-root user (`nextjs`,
-uid 1001), serves Next.js standalone via `node server.js` on port 3000.
-Final image is ~220 MB. Build excludes `node_modules`, `.next`, `.git` and the
-repo's large `*.diff` artifacts via `.dockerignore`.
-
----
+Multi-stage build on `node:22-alpine`, runs as `nextjs` (uid 1001), serves
+`node server.js` on port 3000. Build excludes `node_modules`, `.next`, and
+`.git` via `.dockerignore`.
 
 ## 2. CasaOS
 
-The compose file includes an `x-casaos:` metadata block (title, description,
-icon, port map, env descriptions) that plain Docker Compose ignores but CasaOS
-reads.
+The compose file includes an `x-casaos:` block (title, description, icon, port
+map, env descriptions) that plain Compose ignores.
 
-**Install:**
+1. Clone this repo somewhere persistent (for example `/DATA/AppData/osiris-hq`).
+2. CasaOS → **Install a customized app** → paste `docker-compose.yml`, or run
+   `docker compose up -d --build` from the clone.
+3. The UI is on host port `3000` (or `OSIRIS_PORT`).
 
-1. On the CasaOS host, clone the repo somewhere persistent (e.g.
-   `/DATA/AppData/osiris`).
-2. CasaOS dashboard → **`+`** → **Install a customized app** → paste the
-   contents of `docker-compose.yml`.
-   *(or simply run `docker compose up -d` from the cloned directory).*
-3. OSIRIS appears on the dashboard with its icon, reachable on host port
-   `3000` (or whatever `OSIRIS_PORT` you set in `.env`).
+Icon and screenshots are served from this repo:
 
-The app icon is the gold Eye-of-Horus mark in
-`public/casaos-icon.png` (512×512 PNG), referenced by the `icon:` URL in the
-metadata.
+`https://raw.githubusercontent.com/amineux/osiris-hq/master/public/casaos-icon.png`
 
-> CasaOS stores imported compose files under `/var/lib/casaos/apps/`, so a
-> relative `build:` context may not resolve there. If importing the YAML
-> directly, either build/tag `osiris:latest` first
-> (`docker build -t osiris:latest /path/to/osiris`) or replace the `build:`
-> block with `image: ghcr.io/simplifaisoul/osiris:latest`.
+CasaOS stores imported compose files under `/var/lib/casaos/apps/`, so a
+relative `build:` context may not resolve there. If importing the YAML
+directly, build first:
 
----
+```bash
+docker build -t osiris-hq:latest /path/to/osiris-hq
+```
 
-## 3. API keys & data sources
+then point the service at `image: osiris-hq:latest` instead of `build:`.
 
-Copy `.env.template` to `.env` and fill in only what you need.
+## 3. API keys and data sources
 
-### What the code actually reads today
+Copy `.env.example` to `.env` and fill in only what you need. The file itself
+explains which variables the code actually reads.
 
-| Variable | Purpose | Required for |
-|----------|---------|--------------|
-| `SCANNER_URL` | RECON scanner backend base URL (e.g. `http://scanner:7700`) | RECON toolkit (quick/ssl/headers/rdns/subdomains/tech/whois/geoloc/vuln) |
-| `SCANNER_KEY` | Shared secret; **must equal the backend's `OSIRIS_KEY`** | RECON toolkit |
+### Read by the application
 
-Without `SCANNER_URL`/`SCANNER_KEY` the RECON endpoints return `503` and the
-rest of OSIRIS works normally. Generate a key with `openssl rand -hex 32`.
+| Variable | Purpose |
+|----------|---------|
+| `SCANNER_URL` | RECON scanner backend (e.g. `http://scanner:7700`) |
+| `SCANNER_KEY` | Shared secret; must equal the backend’s `OSIRIS_KEY` |
+| `CLOUDFLARE_API_TOKEN` | Cloudflare Radar “Internet Outages” / “Attack Origins” layers |
+| `ETHERSCAN_API_KEY` | Richer ETH internals (RECON chain tab still works without it) |
+| `HELIUS_API_KEY` | Parsed Solana transfers |
 
-### Optional keys (reserved / for higher rate limits)
+Without `SCANNER_URL` / `SCANNER_KEY`, RECON scan routes return `503` and the
+rest of the dashboard works. Generate a key with `openssl rand -hex 32`.
 
-These are documented for completeness and forward-compatibility. The current
-data routes use **keyless** public feeds, so these are not consumed yet — set
-them only if you extend the relevant route or hit rate limits.
+### Optional / reserved (higher limits or future sources)
 
-| Variable | Service | How to get it (all free) |
-|----------|---------|--------------------------|
-| `FIRMS_API_KEY` | NASA FIRMS active fires | Enter an email at <https://firms.modaps.eosdis.nasa.gov/api/map_key/> — the `MAP_KEY` is emailed instantly. Limit 5000 req / 10 min. |
-| `OPENSKY_CLIENT_ID` / `OPENSKY_CLIENT_SECRET` | OpenSky aviation | Create an account at <https://opensky-network.org/>, open **Account → API client**, create a client and copy id/secret. **OAuth2 only since March 2025** (username/password auth removed). |
-| `N2YO_API_KEY` | N2YO satellites | Register at <https://www.n2yo.com/login/register/>, then **Profile → generate API key**. Limit 1000 req / hour; key can't be regenerated. |
-| `AIS_API_KEY` | aisstream.io maritime | Sign up at <https://aisstream.io/>, create a key on the **API Keys** page. Used over `wss://stream.aisstream.io/v0/stream`. |
+| Variable | Service |
+|----------|---------|
+| `FIRMS_API_KEY` | NASA FIRMS — [map key](https://firms.modaps.eosdis.nasa.gov/api/map_key/) |
+| `OPENSKY_CLIENT_ID` / `OPENSKY_CLIENT_SECRET` | OpenSky OAuth2 (since Mar 2025) |
+| `N2YO_API_KEY` | N2YO satellites |
+| `AIS_API_KEY` | aisstream.io maritime WebSocket |
 
-> Keep `.env` out of version control — it is already in `.gitignore`. Only
-> `.env.template` (no secrets) is committed.
-
-### Optional runtime overrides
+### Runtime
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
-| `OSIRIS_TELEGRAM_CHANNELS` | Comma-separated list of public Telegram channel usernames (no `@`) to scrape for the **Telegram OSINT** map layer. Overrides the curated default set. | `osintdefender,insiderpaper,aljazeeraenglish,nexta_live,war_monitor` |
-| `OSIRIS_PORT` | Host port the compose file publishes (container itself always listens on 3000). | `3000` |
+| `OSIRIS_TELEGRAM_CHANNELS` | Public Telegram usernames (no `@`) for the Telegram layer | curated set in `.env.example` |
+| `OSIRIS_PORT` | Host port Compose publishes | `3000` |
 
-### Keyless sources (no configuration needed)
+`.env` is gitignored. Only `.env.example` is committed.
 
-Aviation → `adsb.lol` · Satellites → `celestrak.org` (TLE) · Fires →
-NASA FIRMS open-data CSV · Earthquakes → USGS · Weather → NASA EONET · Space
-weather → NOAA SWPC · CVEs → NVD · News → public RSS / HLS streams · CCTV →
-public traffic-authority feeds · Crypto (BTC) → `blockstream.info` · Crypto
-(ETH) → `eth.blockscout.com` ([Blockscout](https://github.com/blockscout/blockscout)
-open-source explorer) · OFAC SDN sanctions → [OpenSanctions](https://www.opensanctions.org)
-mirror (CC-BY 4.0) · Telegram OSINT → public `t.me/s/<channel>` web preview.
+### Keyless sources (no configuration)
+
+Aviation → `adsb.lol` · Satellites → `celestrak.org` · Fires → NASA FIRMS open
+CSV · Earthquakes → USGS · Weather → NASA EONET · Space weather → NOAA SWPC ·
+CVEs → NVD · News → public RSS / HLS · CCTV → public traffic-authority feeds ·
+BTC → `mempool.space` / `blockstream.info` · ETH → `eth.blockscout.com` ·
+Sanctions → [OpenSanctions](https://www.opensanctions.org) (CC-BY 4.0) ·
+Telegram → public `t.me/s/<channel>` previews.

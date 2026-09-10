@@ -3,7 +3,7 @@
  * ║  POLYBOLOS SDK — Core Type System                               ║
  * ║  Standardized Entity Model for Multi-Domain Intelligence        ║
  * ║                                                                 ║
- * ║  Built on OSIRIS by Souleimen Mrad                              ║
+ * ║  Used by Osiris HQ (amineux) · based on OSIRIS by simplifaisoul ║
  * ╚══════════════════════════════════════════════════════════════════╝
  */
 

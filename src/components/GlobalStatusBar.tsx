@@ -8,15 +8,9 @@ interface CryptoPrice { symbol: string; price: number; change24h?: number; }
 interface Earthquake { id: string; magnitude: number; place: string; time: number; depth: number; }
 
 /* ─── Inline SVG Icons ─── */
-const DiscordIcon = () => (
+const GitHubIcon = () => (
   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026c.462-.62.874-1.275 1.226-1.963.021-.04.001-.088-.041-.104a13.201 13.201 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125c-.598.344-1.22.635-1.873.877a.075.075 0 0 0-.041.105c.36.687.772 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028zM8.02 15.278c-1.182 0-2.157-1.069-2.157-2.38 0-1.312.956-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.956 2.38-2.157 2.38zm7.975 0c-1.183 0-2.157-1.069-2.157-2.38 0-1.312.955-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.946 2.38-2.157 2.38z"/>
-  </svg>
-);
-
-const XIcon = () => (
-  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/>
+    <path d="M12 .5C5.73.5.5 5.73.5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.54-3.88-1.54-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.4-5.26 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5Z" />
   </svg>
 );
 
@@ -130,11 +124,9 @@ export default function GlobalStatusBar() {
     return () => clearInterval(iv);
   }, []);
 
-  // Keep the bar mounted even with no feed data — the left-hand community and
+  // Keep the bar mounted even with no feed data — the left-hand repo and
   // docs links must stay reachable when CoinGecko/USGS are rate-limited or down.
   const hasTicker = crypto.length > 0 || quakes.length > 0;
-
-  const solPrice = crypto.find(c => c.symbol === 'SOL');
 
   return (
     <motion.div
@@ -147,19 +139,15 @@ export default function GlobalStatusBar() {
         {/* Animated scan line */}
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[var(--cyan-primary)]/30 to-transparent" style={{ animation: 'hud-scanline 4s linear infinite' }} />
         
-        {/* ── LEFT: Social & Community Links ── */}
+        {/* ── LEFT: Repo & docs ── */}
         <div className="flex-shrink-0 h-full flex items-center pointer-events-auto">
-          {/* Discord — highlighted */}
-          <a href="https://discord.gg/EPaFD5FFKf" target="_blank" rel="noopener noreferrer"
-            className="h-full px-3 flex items-center gap-1.5 bg-[#5865F2]/10 hover:bg-[#5865F2]/25 border-r border-white/[0.04] transition-all duration-200 group"
+          <a href="https://github.com/amineux/osiris-hq" target="_blank" rel="noopener noreferrer"
+            title="amineux / osiris-hq"
+            aria-label="GitHub repository"
+            className="h-full px-3 flex items-center gap-1.5 bg-[var(--gold-primary)]/10 text-[var(--gold-primary)]/80 hover:text-[var(--gold-primary)] hover:bg-[var(--gold-primary)]/20 border-r border-white/[0.04] transition-all duration-200"
           >
-            <DiscordIcon />
-          </a>
-          {/* X / Twitter */}
-          <a href="https://x.com/soulsimplifai" target="_blank" rel="noopener noreferrer"
-            className="h-full px-2.5 flex items-center gap-1.5 text-white/40 hover:text-white hover:bg-white/[0.04] border-r border-white/[0.04] transition-all duration-200"
-          >
-            <XIcon />
+            <GitHubIcon />
+            <span className="text-[9px] font-bold tracking-[0.15em] uppercase hidden sm:inline">amineux</span>
           </a>
           {/* Documentation & API reference */}
           <Link href="/docs" prefetch title="Documentation & API Reference" aria-label="Documentation & API Reference"
